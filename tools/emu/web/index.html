@@ -58,6 +58,12 @@ select { background: var(--dark); color: var(--cream); border: 0; padding: 8px 1
 .legend p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--ground); font-weight: 600; }
 kbd { font: 800 13px/1 "Inter Tight", system-ui, sans-serif; background: rgba(8, 8, 8, 0.82); color: var(--cream); padding: 2px 5px; }
 footer { margin-top: 24px; font-size: 13px; color: var(--grey); text-align: center; }
+.setbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; width: 100%; max-width: 1240px; border: 3px solid var(--orange); padding: 12px 16px; }
+.setbar label { font-size: 22px; font-weight: 900; color: var(--cream); }
+.setbar label small { font-size: 14px; color: var(--orange); margin-left: 4px; }
+.setbar select { font-size: 18px; font-weight: 800; padding: 10px 12px; max-width: none; min-width: 0; flex: 1 1 220px; }
+.setbar .btn { font-size: 18px; padding: 8px 14px; }
+.setbar p { flex: 1 1 100%; margin: 0; font-size: 14px; color: var(--text); }
 @media (min-width: 1500px) and (min-height: 1250px) { :root { --lcd: 720px; } }
 /* the screen enlarged above the panel only where the panel's own is small (a phone); elsewhere the panel's screen, as
    on the device */
@@ -72,6 +78,13 @@ footer { margin-top: 24px; font-size: 13px; color: var(--grey); text-align: cent
   </header>
   <div class="stripe"><i style="background:#E63829"></i><i style="background:#F67918"></i><i style="background:#F6B600"></i><i style="background:#29B27B"></i><i style="background:#2950CD"></i></div>
   <main class="stage">
+    <div class="setbar">
+      <label for="chordset">Chord set <small>J-6</small></label>
+      <button class="btn" id="setdn" aria-label="Previous chord set">&#9664;</button>
+      <select id="chordset"><option value="0">Off (ChoralRoot chord keys)</option></select>
+      <button class="btn" id="setup" aria-label="Next chord set">&#9654;</button>
+      <p>With a set on, the right 18 keys play its chords and the left nine control it (SET&minus; SET+, genre, transpose, hold, phrase).</p>
+    </div>
     <div class="lcdbox" title="the FM-1's screen, 240 x 240 pixels, enlarged">
       <canvas id="lcd" width="240" height="240" aria-label="The FM-1 screen"></canvas>
     </div>
@@ -86,7 +99,6 @@ footer { margin-top: 24px; font-size: 13px; color: var(--grey); text-align: cent
     <div id="status">Loading&hellip;</div>
     <div class="bar">
       <div class="meter" title="the share of real time the browser spends running the device">LOAD <b><i id="load"></i></b> <span id="loadv">&ndash;</span></div>
-      <label>Chord set <select id="chordset"><option value="0">Off (chord keys)</option></select></label>
       <button id="midi" class="btn">Enable MIDI</button>
       <label hidden>Out <select id="mout"><option value="">none</option></select></label>
       <label hidden>In <select id="min"><option value="">none</option></select></label>
@@ -101,7 +113,7 @@ footer { margin-top: 24px; font-size: 13px; color: var(--grey); text-align: cent
     <footer>GPL-3.0 &middot; the FM-1 firmware and its emulator, compiled to WebAssembly; the screen is the device's 240 &times; 240 framebuffer, the buttons carry the names printed on the FM-1 (ChoralRoot's role under each). Not tested on real hardware. Settings and sounds you save stay in this browser.</footer>
   </main>
 </div>
-<script src="keymap.js"></script>
-<script src="emu.js"></script>
+<script src="keymap.js?v=@V@"></script>
+<script src="emu.js?v=@V@"></script>
 </body>
 </html>

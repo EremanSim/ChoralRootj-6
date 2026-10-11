@@ -5,6 +5,9 @@
 "use strict";
 (() => {
   const { KEYMAP, BTN, BTN_ROLE, ENC, ENC_ROLE, CHORD, SETK, noteName } = globalThis.FM1;
+  // the build's version (build_web.sh: emu.js?v=...), added to the files this script loads so a browser never mixes an
+  // old cached worklet or wasm with a new page (none on file://)
+  const VQ = location.protocol === "file:" ? "" : (document.currentScript && new URL(document.currentScript.src).search) || "";
   const $ = (id) => document.getElementById(id);
   const NS = "http://www.w3.org/2000/svg";
   const C = { cream: "#F6F2EE", red: "#E63829", orange: "#F67918", yellow: "#F6B600", blue: "#2950CD", green: "#29B27B",
@@ -282,7 +285,7 @@
         x.send();
       })
     : fetch(url).then((r) => { if (!r.ok) throw new Error(url + ": " + r.status); return r.arrayBuffer(); });
-  const wasmP = getBytes("choralroot.wasm");
+  const wasmP = getBytes("choralroot.wasm" + VQ);
 
   // before Start: the device boots here, silently, to show its screen (?demo: MAJ + D4 held, for screenshots)
   (async () => {
@@ -329,7 +332,7 @@
     try {
       if (!window.AudioWorkletNode) throw new Error("this browser has no AudioWorklet (try a current Chrome, Firefox or Safari)");
       const ctx = new AudioContext({ sampleRate: 44100, latencyHint: "playback" });
-      await ctx.audioWorklet.addModule("worklet.js");
+      await ctx.audioWorklet.addModule("worklet.js" + VQ);
       node = new AudioWorkletNode(ctx, "choralroot-fm1", { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2] });
       node.connect(ctx.destination);
       node.port.onmessage = (e) => onWorklet(e.data);
@@ -428,6 +431,9 @@
   if (setSel) {
     GENRES.forEach((g, i) => setSel.add(new Option(`${String(i + 1).padStart(3, "0")} ${g}`, i + 1)));
     setSel.onchange = () => { wantSet = +setSel.value; if (node) post({ type: "chordset", n: wantSet }); else applyPreviewSet(); };
+    const step = (d) => { setSel.value = String(((+setSel.value || 0) + d + 101) % 101); setSel.onchange(); };
+    $("setdn").onclick = () => step(-1);
+    $("setup").onclick = () => step(1);
   }
   let applyPreviewSet = () => {};
   const showSet = (n) => {

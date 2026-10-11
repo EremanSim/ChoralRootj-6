@@ -69,7 +69,7 @@ jobs:
   site:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 55
     permissions:
       contents: read
     env:
@@ -94,7 +94,12 @@ jobs:
           set -euo pipefail
           pkg="choralroot-$VERSION.fwsc"
           mkdir -p build
-          if ! gh release download "v$VERSION" --repo "$GITHUB_REPOSITORY" --pattern "$pkg" --dir build --clobber; then
+          # a release made in the browser starts this before release.yml has attached the package: wait for it (20 min)
+          for i in $(seq 1 40); do
+            gh release download "v$VERSION" --repo "$GITHUB_REPOSITORY" --pattern "$pkg" --dir build --clobber 2>/dev/null && break
+            echo "waiting for $pkg on the release v$VERSION ($i/40)"; sleep 30
+          done
+          if [ ! -s "build/$pkg" ]; then
             echo "::error title=No package for v$VERSION::The release v$VERSION does not exist or has no asset $pkg. Push the tag v$VERSION so release.yml builds and attaches it, or build locally (./build.sh --release $VERSION), upload build/release-$VERSION/* to the release v$VERSION by hand, then run pages.yml again with version $VERSION."
             exit 1
           fi

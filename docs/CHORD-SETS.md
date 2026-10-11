@@ -51,7 +51,7 @@ genres, chord names and notes. See [Where the sets come from](#where-the-sets-co
 
 ## Playing them in a browser
 
-`web/j6/index.html` is a stand-alone chord player that needs no FM-1 and runs from any static web server or
+`web/j6/player.html` (a sketch player, not the FM-1; `j6/` itself opens the FM-1 emulator, `emu/?set=1`) is a stand-alone chord player that needs no FM-1 and runs from any static web server or
 GitHub Pages (`j6/`):
 
 - the 100 sets, a set browser filtered by genre, each key labelled with its chord;
@@ -64,8 +64,9 @@ GitHub Pages (`j6/`):
 - Web MIDI in (a MIDI keyboard plays the key's chord) and out where the browser allows it;
 - computer keys `A W S E D F T G Y H U J` for C … B, `Z`/`X` for octave, `,`/`.` for the set, `Space` to play.
 
-The firmware itself also runs in the browser (`tools/emu/web`, published as `emu/`). There, Options > Chord Set
-works as it does on the unit.
+The firmware itself also runs in the browser (`tools/emu/web`, published as `emu/`): the device's 240 x 240 screen, the
+FM-1 panel with its printed button names (ChoralRoot's role under each). A select under the panel sets Options > Chord
+Set (`web_chord_set_set`), `?set=N` sets it on load, and the chord block's labels become the SET block's while a set is on.
 
 ## Where the sets come from
 

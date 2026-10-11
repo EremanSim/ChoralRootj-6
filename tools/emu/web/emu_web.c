@@ -231,3 +231,6 @@ WEB_EXPORT uint32_t web_flash_dirty(void) { return emu_flash_writes; }  /* erase
 WEB_EXPORT const char *web_version(void) { return FELUCCA_VERSION; }
 WEB_EXPORT uint32_t web_cpu(void) { return song.cpu_q8 * 100u / 256u; }
 WEB_EXPORT void web_dump(void) { emu_fw_dump(); }                    /* to stdout (fd_write) */
+/* Options > Chord Set (docs/CHORD-SETS.md): read (0 off, 1..100) and set, as KNOB 1 on that entry does */
+WEB_EXPORT uint32_t web_chord_set(void) { return booted ? cs.chord_set : 0u; }
+WEB_EXPORT void web_chord_set_set(uint32_t n) { if (booted) opt_set(O_CHORDSET, (int32_t)(n > CR_NCHORDSET ? 0u : n)); }

@@ -1,10 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
-# Publish the browser side to GitHub Pages without a firmware release: the chord player (web/j6) and the firmware
-# emulator (tools/emu/web, Emscripten). pages.yml (a release) publishes the full site, j6/ included; this one is for a
-# repository with no release yet, or to refresh the player between releases.
-#   push to the default branch touching web/j6, data/chordsets, firmware or tools/emu  -> build, check, deploy
-#   workflow_dispatch                                                                   -> the same
-# Settings -> Pages -> Source must be "GitHub Actions".
+# Check the browser side on every push: the chord sets generated from the list, the engine tests, the firmware
+# emulator (tools/emu/web, Emscripten) built and run through its test (Options > Chord Set and the SET block among
+# them). It deploys nothing: pages.yml publishes the whole site (installer, emu/, j6/) for a release.
 name: web
 
 on:
@@ -21,9 +18,6 @@ on:
 
 permissions: {}
 
-concurrency:
-  group: pages
-  cancel-in-progress: false
 
 env:
   PYTHON_VERSION: "3.11"
@@ -77,32 +71,3 @@ jobs:
           python3 -c 'import sys; sys.path.insert(0, "tools"); import build; build.generate()'
           CR_VERSION="j6-web" sh tools/emu/web/build_web.sh
           node tools/emu/web/test_web_emu.mjs --no-native --no-page
-
-      - name: Make the site
-        run: |
-          set -euo pipefail
-          mkdir -p build/site/j6 build/site/emu
-          cp web/j6/site-index.html build/site/index.html
-          cp web/j6/index.html web/j6/chordsets.js build/site/j6/
-          cp build/emu-web/* build/site/emu/
-          find build/site -type f | sort
-
-      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
-        with:
-          path: build/site
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

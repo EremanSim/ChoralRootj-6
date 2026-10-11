@@ -18,9 +18,23 @@ genres, chord names and notes. See [Where the sets come from](#where-the-sets-co
 | Off (default) | as before: a key alone is a single note, the chord keys (DIM MIN MAJ SUS, 6 m7 M7 9) build the chord |
 | 1 … 100 | a key alone plays that set's chord for its pitch class |
 
-- **The chord keys still work.** Hold a chord key (or latch it with LOCK) and the root key plays the chord block's
-  chord as before. Let go of the chord keys and the root plays the set's chord again. This lets you mix
-  the set with your own chords.
+- **The keys (the SET block).** With a set on, the nine keys of the chord block (F3 … C#4) are the set's controls, as
+  the J-6's panel is, and the 18 roots play the set's chords:
+
+  | Key | Job |
+  | --- | --- |
+  | F3 / G3 | SET − / SET + (wrapping 1 … 100) |
+  | F#3 / G#3 | GENRE − / GENRE +: the first set of the previous / next genre |
+  | A3 / A#3 | TRANSPOSE − / + (−12 … +12 semitones, the KEY layer's transpose) |
+  | B3 | HOLD: the latch (LATCH's Sticky) on / off |
+  | C4 | PHRASE on / off: the performance mode (PERF tap), as the J-6's STYLE ON |
+  | C#4 | next PHRASE: Strum, Strum 2 Octaves, Slop, Arpeggiate, Arp 2 Octaves, Pattern, Harp (on with it) |
+
+  Every key of the block glows faint; lit means on (HOLD, PHRASE, the transpose's direction) or held. Each press shows
+  its popup (the set's number and genre, the transpose, the phrase's name). No chord key and no LOCK while a set is on:
+  Chord Set Off brings them back (turning a set on releases LOCK and its latch). The KEY layer with its keys on pick
+  still takes the block (MAJ / MIN pick the scale). In the engine a chord key held would still override the set
+  (cr_engine.h `cr_set_chord_set`); the UI no longer sends one while a set is on.
 - **Octaves.** The roots D4 … C#5 play every chord of the set at the pitches the list gives. A root an octave above
   or below that plays the same chord an octave higher or lower. OCT- / OCT+ move it by octaves too.
 - **Transpose, voicing, bass, performance.** KNOB 1's voicing rotates the set's voicing (lowest note up an octave,
@@ -41,8 +55,8 @@ genres, chord names and notes. See [Where the sets come from](#where-the-sets-co
 GitHub Pages (`j6/`):
 
 - the 100 sets, a set browser filtered by genre, each key labelled with its chord;
-- an original Web Audio synth with 8 sounds (poly pad, brass, strings, electric piano, pluck, organ, bell, lo-fi
-  keys), chorus, delay and reverb;
+- an original Web Audio synth with 24 sounds in 8 groups (pads, strings, brass, keys, organs, plucks, bells,
+  synths), chorus, delay and reverb; ◀ ▶ or `N` / `M` step through them;
 - 14 styles: held chord, strum up and down, five arpeggios, pulse, house offbeat, syncopated, Charleston, broken
   (Alberti) and bass + chord;
 - octave, transpose, voicing, hold (latch) and bass doubling;

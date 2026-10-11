@@ -136,7 +136,12 @@ kbd { font-family: var(--font-lcd); font-size: 16px; background: var(--panel-2);
             <select id="setSel" aria-label="Chord set"></select>
             <button class="btn" id="setUp" aria-label="Next set">▶</button></div>
         </div>
-        <label class="field"><span class="lab">Sound</span><select id="tone"></select></label>
+        <div class="field" style="grid-column: span 2">
+          <span class="lab">Sound (24)</span>
+          <div class="pair"><button class="btn" id="toneDn" aria-label="Previous sound">◀</button>
+            <select id="tone" aria-label="Sound"></select>
+            <button class="btn" id="toneUp" aria-label="Next sound">▶</button></div>
+        </div>
         <label class="field"><span class="lab">Style</span><select id="style"></select></label>
         <label class="field"><span class="lab">Tempo</span><input id="bpm" type="number" min="40" max="240" value="110"></label>
         <div class="field"><span class="lab">Octave</span><div class="pair"><button class="btn" id="octDn">−</button><output id="octOut">0</output><button class="btn" id="octUp">+</button></div></div>
@@ -181,7 +186,7 @@ kbd { font-family: var(--font-lcd); font-size: 16px; background: var(--panel-2);
     <div class="genres" id="genres"></div>
     <div class="setlist" id="setlist"></div>
     <p class="note">Keys: <kbd>A</kbd> <kbd>W</kbd> <kbd>S</kbd> <kbd>E</kbd> <kbd>D</kbd> <kbd>F</kbd> <kbd>T</kbd> <kbd>G</kbd> <kbd>Y</kbd> <kbd>H</kbd> <kbd>U</kbd> <kbd>J</kbd> play C…B,
-      <kbd>Z</kbd>/<kbd>X</kbd> octave, <kbd>,</kbd>/<kbd>.</kbd> previous / next set. A MIDI keyboard plays the chord of each note's key when the browser allows Web MIDI.
+      <kbd>Z</kbd>/<kbd>X</kbd> octave, <kbd>,</kbd>/<kbd>.</kbd> previous / next set, <kbd>N</kbd>/<kbd>M</kbd> previous / next sound. A MIDI keyboard plays the chord of each note's key when the browser allows Web MIDI.
       The chord sets follow the chord names and voicings published in the Roland J-6 owner's manual; the sound engine, sequencer and code are this project's own (GPL-3.0).
       Not affiliated with or endorsed by Roland. "Roland", "AIRA" and "J-6" are trademarks of Roland Corporation.</p>
   </section>
@@ -228,15 +233,39 @@ function chordFor(key) {              // key 0..11 -> {name, notes}
 const noteName = (n) => KEY_NAMES[n % 12] + (Math.floor(n / 12) - 1);
 
 /* ------------------------------------------------------------ the synth --- */
+// 24 sounds in 8 groups (each the player's own recipe: oscillators, detune, unison, a 2-op FM, a filter envelope)
 const TONES = {
-  juno:   { label: "Poly Pad",      w: ["sawtooth", "sawtooth"], det: 7,  sub: 0.25, a: 0.06, d: 0.6, s: 0.75, r: 0.9, cut: 2600, env: 1800, q: 4,  gain: 0.20 },
-  brass:  { label: "Poly Brass",    w: ["sawtooth", "sawtooth"], det: 4,  sub: 0,    a: 0.04, d: 0.3, s: 0.8,  r: 0.35, cut: 900, env: 3200, q: 2,  gain: 0.20 },
-  string: { label: "Strings",       w: ["sawtooth", "sawtooth"], det: 11, sub: 0,    a: 0.35, d: 1.0, s: 0.9,  r: 1.2, cut: 3200, env: 600,  q: 1,  gain: 0.17 },
-  ep:     { label: "Electric Piano",w: ["sine", "triangle"],     det: 2,  sub: 0,    a: 0.005, d: 1.4, s: 0.25, r: 0.6, cut: 4200, env: 2200, q: 0.7, gain: 0.32, fm: 3.5 },
-  pluck:  { label: "Pluck",         w: ["square", "sawtooth"],   det: 5,  sub: 0.2,  a: 0.002, d: 0.28, s: 0.0, r: 0.25, cut: 500, env: 4800, q: 6,  gain: 0.22 },
-  organ:  { label: "Organ",         w: ["sine", "sine"],         det: 0,  sub: 0.5,  a: 0.01, d: 0.1, s: 1.0,  r: 0.12, cut: 6000, env: 0,    q: 0.5, gain: 0.20, oct2: true },
-  bell:   { label: "Glass Bell",    w: ["sine", "sine"],         det: 1,  sub: 0,    a: 0.003, d: 2.2, s: 0.0, r: 1.6, cut: 7000, env: 0,    q: 0.5, gain: 0.30, fm: 3.51 },
-  lofi:   { label: "Lofi Keys",     w: ["triangle", "sine"],     det: 9,  sub: 0,    a: 0.01, d: 0.9, s: 0.35, r: 0.5, cut: 1600, env: 900,  q: 1,  gain: 0.30, wow: true },
+  // pads
+  juno:    { g: "Pad", label: "Poly Pad",        w: ["sawtooth", "sawtooth"], det: 7,  sub: 0.25, a: 0.06, d: 0.6, s: 0.75, r: 0.9, cut: 2600, env: 1800, q: 4, gain: 0.20 },
+  warm:    { g: "Pad", label: "Warm Pad",        w: ["sawtooth", "triangle"], det: 9,  sub: 0.2,  a: 0.5,  d: 1.5, s: 0.85, r: 1.8, cut: 1300, env: 500,  q: 1, gain: 0.22 },
+  sweep:   { g: "Pad", label: "Sweep Pad",       w: ["sawtooth", "sawtooth"], det: 12, sub: 0,    a: 0.4,  d: 2.0, s: 0.9,  r: 2.0, cut: 900,  env: 300,  q: 7, gain: 0.18, sweep: [0.18, 2200] },
+  choir:   { g: "Pad", label: "Choir Pad",       w: ["triangle", "sawtooth"], det: 8,  sub: 0,    a: 0.45, d: 1.0, s: 0.9,  r: 1.5, cut: 1500, env: 200,  q: 5, gain: 0.20, noise: 0.03, vib: 5 },
+  glass:   { g: "Pad", label: "Glass Pad",       w: ["triangle", "sine"],     det: 6,  sub: 0,    a: 0.3,  d: 1.2, s: 0.8,  r: 2.2, cut: 5000, env: 0,    q: 1, gain: 0.26, fm: 2.0, fmAmt: 0.6 },
+  // strings
+  string:  { g: "Strings", label: "Strings",     w: ["sawtooth", "sawtooth"], det: 11, sub: 0,    a: 0.35, d: 1.0, s: 0.9,  r: 1.2, cut: 3200, env: 600,  q: 1, gain: 0.17, uni: 2 },
+  slowstr: { g: "Strings", label: "Slow Strings",w: ["sawtooth", "sawtooth"], det: 14, sub: 0,    a: 1.2,  d: 1.5, s: 0.95, r: 2.4, cut: 2400, env: 300,  q: 1, gain: 0.17, uni: 2, vib: 4 },
+  // brass
+  brass:   { g: "Brass", label: "Poly Brass",    w: ["sawtooth", "sawtooth"], det: 4,  sub: 0,    a: 0.04, d: 0.3, s: 0.8,  r: 0.35, cut: 900, env: 3200, q: 2, gain: 0.20 },
+  softbr:  { g: "Brass", label: "Soft Brass",    w: ["sawtooth", "square"],   det: 5,  sub: 0,    a: 0.12, d: 0.6, s: 0.7,  r: 0.5, cut: 700,  env: 1600, q: 1, gain: 0.20 },
+  // keys
+  ep:      { g: "Keys", label: "Electric Piano", w: ["sine", "triangle"],     det: 2,  sub: 0,    a: 0.005, d: 1.4, s: 0.25, r: 0.6, cut: 4200, env: 2200, q: 0.7, gain: 0.32, fm: 3.5 },
+  tine:    { g: "Keys", label: "Tine Piano",     w: ["sine", "sine"],         det: 1,  sub: 0,    a: 0.002, d: 1.8, s: 0.15, r: 0.7, cut: 7000, env: 0,    q: 0.5, gain: 0.34, fm: 1.0, fmAmt: 1.6 },
+  lofi:    { g: "Keys", label: "Lofi Keys",      w: ["triangle", "sine"],     det: 9,  sub: 0,    a: 0.01, d: 0.9, s: 0.35, r: 0.5, cut: 1600, env: 900,  q: 1, gain: 0.30, wow: true },
+  clav:    { g: "Keys", label: "Clav",           w: ["square", "sawtooth"],   det: 3,  sub: 0,    a: 0.002, d: 0.35, s: 0.2, r: 0.15, cut: 1200, env: 4000, q: 5, gain: 0.18, hp: 300 },
+  vibes:   { g: "Keys", label: "Vibes",          w: ["sine", "sine"],         det: 0,  sub: 0,    a: 0.002, d: 2.0, s: 0.0, r: 1.2, cut: 8000, env: 0,    q: 0.5, gain: 0.32, fm: 4.0, fmAmt: 0.5, trem: 5.5 },
+  // organ
+  organ:   { g: "Organ", label: "Organ",         w: ["sine", "sine"],         det: 0,  sub: 0.5,  a: 0.01, d: 0.1, s: 1.0,  r: 0.12, cut: 6000, env: 0,    q: 0.5, gain: 0.20, oct2: true },
+  rock:    { g: "Organ", label: "Drawbar Organ", w: ["square", "sine"],       det: 0,  sub: 0.4,  a: 0.005, d: 0.1, s: 1.0, r: 0.1, cut: 3000, env: 0,    q: 0.5, gain: 0.15, oct2: true, trem: 6.5 },
+  // plucks and bells
+  pluck:   { g: "Pluck", label: "Pluck",         w: ["square", "sawtooth"],   det: 5,  sub: 0.2,  a: 0.002, d: 0.28, s: 0.0, r: 0.25, cut: 500, env: 4800, q: 6, gain: 0.22 },
+  harp:    { g: "Pluck", label: "Harp",          w: ["triangle", "sine"],     det: 2,  sub: 0,    a: 0.002, d: 1.1, s: 0.0, r: 0.8, cut: 3500, env: 2500, q: 1, gain: 0.34 },
+  kalimba: { g: "Pluck", label: "Kalimba",       w: ["sine", "sine"],         det: 0,  sub: 0,    a: 0.001, d: 0.6, s: 0.0, r: 0.4, cut: 9000, env: 0,    q: 0.5, gain: 0.36, fm: 5.4, fmAmt: 0.8 },
+  bell:    { g: "Bell", label: "Glass Bell",     w: ["sine", "sine"],         det: 1,  sub: 0,    a: 0.003, d: 2.2, s: 0.0, r: 1.6, cut: 7000, env: 0,    q: 0.5, gain: 0.30, fm: 3.51 },
+  musicbox:{ g: "Bell", label: "Music Box",      w: ["sine", "triangle"],     det: 0,  sub: 0,    a: 0.001, d: 1.2, s: 0.0, r: 1.0, cut: 9000, env: 0,    q: 0.5, gain: 0.30, fm: 7.0, fmAmt: 0.4, oct2: true },
+  // synth
+  stab:    { g: "Synth", label: "House Stab",    w: ["sawtooth", "square"],   det: 6,  sub: 0.2,  a: 0.002, d: 0.22, s: 0.15, r: 0.2, cut: 600, env: 5000, q: 8, gain: 0.20 },
+  super:   { g: "Synth", label: "Supersaw",      w: ["sawtooth", "sawtooth"], det: 16, sub: 0.15, a: 0.02, d: 0.5, s: 0.8,  r: 0.6, cut: 3800, env: 1500, q: 1, gain: 0.13, uni: 3 },
+  square:  { g: "Synth", label: "Square Chords", w: ["square", "square"],     det: 8,  sub: 0,    a: 0.01, d: 0.4, s: 0.6,  r: 0.4, cut: 1800, env: 1800, q: 2, gain: 0.15 },
 };
 let ac = null, bus, master, dry, chorusIn, delayNode, delayFb, delaySend, revSend, conv;
 function makeImpulse(ctx, secs) {
@@ -285,6 +314,8 @@ function voiceOn(note, when, vel = 0.9) {     // returns a release(when) functio
   const T = TONES[S.tone] || TONES.juno, f = mtof(note);
   const out = ac.createGain(); out.gain.value = 0;
   const filt = ac.createBiquadFilter(); filt.type = "lowpass"; filt.Q.value = T.q;
+  let into = filt;
+  if (T.hp) { const h = ac.createBiquadFilter(); h.type = "highpass"; h.frequency.value = T.hp; h.connect(filt); into = h; }
   const cutBase = T.cut * Math.pow(2, (S.cutoff - 62) / 18);
   filt.frequency.setValueAtTime(Math.min(18000, cutBase), when);
   if (T.env) {
@@ -292,26 +323,41 @@ function voiceOn(note, when, vel = 0.9) {     // returns a release(when) functio
     filt.frequency.setTargetAtTime(Math.min(18000, cutBase + T.env * T.s * 0.4), when + T.a, T.d / 3);
   }
   const oscs = [];
+  const pitched = [];
   T.w.forEach((w, i) => {
-    const o = ac.createOscillator(); o.type = w; o.frequency.value = T.oct2 && i ? f * 2 : f;
-    o.detune.value = i ? T.det : -T.det;
-    const g = ac.createGain(); g.gain.value = i && T.oct2 ? 0.5 : 0.6;
-    o.connect(g).connect(filt); oscs.push(o);
+    const n = 1 + (T.uni || 0) * (i ? 1 : 0);     // unison: extra detuned copies of the second oscillator
+    for (let u = 0; u < n; u++) {
+      const o = ac.createOscillator(); o.type = w; o.frequency.value = T.oct2 && i ? f * 2 : f;
+      o.detune.value = (i ? T.det : -T.det) * (1 + u * 0.9) * (u % 2 ? -1 : 1);
+      const g = ac.createGain(); g.gain.value = (i && T.oct2 ? 0.5 : 0.6) / Math.sqrt(n);
+      o.connect(g).connect(into); oscs.push(o); pitched.push(o);
+    }
   });
-  if (T.fm) {                                   // a simple 2-op FM tine / bell on the first oscillator
+  if (T.fm) {                                   // a 2-op FM tine / bell on the first oscillator
     const m = ac.createOscillator(); m.frequency.value = f * T.fm;
-    const mg = ac.createGain(); mg.gain.setValueAtTime(f * 2.2, when); mg.gain.setTargetAtTime(f * 0.15, when, T.d / 4);
-    m.connect(mg).connect(oscs[0].frequency); oscs.push(m);
+    const amt = T.fmAmt || 1;
+    const mg = ac.createGain(); mg.gain.setValueAtTime(f * 2.2 * amt, when); mg.gain.setTargetAtTime(f * 0.15 * amt, when, T.d / 4);
+    m.connect(mg).connect(pitched[0].frequency); oscs.push(m);
   }
   if (T.sub) {
     const o = ac.createOscillator(); o.type = "sine"; o.frequency.value = f / 2;
-    const g = ac.createGain(); g.gain.value = T.sub; o.connect(g).connect(filt); oscs.push(o);
+    const g = ac.createGain(); g.gain.value = T.sub; o.connect(g).connect(into); oscs.push(o);
   }
-  if (T.wow) {
-    const l = ac.createOscillator(); l.frequency.value = 0.7; const lg = ac.createGain(); lg.gain.value = 9;
-    l.connect(lg); oscs.forEach((o) => o.detune && lg.connect(o.detune)); oscs.push(l);
+  if (T.noise) {                                // breath / air
+    const len = ac.sampleRate, nb = ac.createBuffer(1, len, len), d = nb.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const ns = ac.createBufferSource(); ns.buffer = nb; ns.loop = true;
+    const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = f * 2; bp.Q.value = 2;
+    const g = ac.createGain(); g.gain.value = T.noise * 10; ns.connect(bp).connect(g).connect(into); oscs.push(ns);
   }
-  filt.connect(out).connect(bus);
+  const lfo = (rate, depth, target) => { const l = ac.createOscillator(); l.frequency.value = rate; const lg = ac.createGain();
+    lg.gain.value = depth; l.connect(lg); target(lg); oscs.push(l); };
+  if (T.wow) lfo(0.7, 9, (g) => pitched.forEach((o) => g.connect(o.detune)));
+  if (T.vib) lfo(T.vib, 6, (g) => pitched.forEach((o) => g.connect(o.detune)));
+  if (T.sweep) lfo(T.sweep[0], T.sweep[1], (g) => g.connect(filt.frequency));
+  let tail = filt;
+  if (T.trem) { const tg = ac.createGain(); tg.gain.value = 0.8; filt.connect(tg); lfo(T.trem, 0.2, (g) => g.connect(tg.gain)); tail = tg; }
+  tail.connect(out).connect(bus);
   const peak = T.gain * vel, rel = T.r * Math.pow(2, (S.release - 45) / 22);
   out.gain.setValueAtTime(0, when);
   out.gain.linearRampToValueAtTime(peak, when + T.a);
@@ -532,6 +578,7 @@ document.addEventListener("keydown", (e) => {
   if (e.repeat) return;
   if (e.code === "KeyZ") step("oct", -1); else if (e.code === "KeyX") step("oct", 1);
   else if (e.code === "Comma") setSet(S.set - 1); else if (e.code === "Period") setSet(S.set + 1);
+  else if (e.code === "KeyN") stepTone(-1); else if (e.code === "KeyM") stepTone(1);
   else if (e.code === "Space") { e.preventDefault(); setPlaying(!playing); }
 });
 document.addEventListener("keyup", (e) => { if (COMPUTER.includes(e.code)) release(e.code); });
@@ -539,6 +586,7 @@ window.addEventListener("blur", () => { [...held.keys()].forEach(release); });
 
 /* ------------------------------------------------------------ controls --- */
 const LIM = { oct: [-2, 2], tr: [-12, 12], voicing: [-4, 4] };
+let stepTone = () => {};
 function step(what, d) {
   S[what] = Math.max(LIM[what][0], Math.min(LIM[what][1], S[what] + d));
   refresh();
@@ -563,8 +611,17 @@ function buildControls() {
   CHORD_SETS.forEach((s) => { const o = document.createElement("option"); o.value = s.n; o.textContent = `${String(s.n).padStart(3, "0")} ${s.genre}`; sel.appendChild(o); });
   sel.onchange = () => setSet(+sel.value);
   $("setDn").onclick = () => setSet(S.set - 1); $("setUp").onclick = () => setSet(S.set + 1);
-  const tone = $("tone"); Object.entries(TONES).forEach(([k, t]) => tone.add(new Option(t.label, k))); tone.value = S.tone;
+  const tone = $("tone"), groups = {};
+  Object.entries(TONES).forEach(([k, t], i) => {
+    if (!groups[t.g]) { groups[t.g] = document.createElement("optgroup"); groups[t.g].label = t.g; tone.appendChild(groups[t.g]); }
+    groups[t.g].appendChild(new Option(`${String(i + 1).padStart(2, "0")} ${t.label}`, k));
+  });
+  if (!TONES[S.tone]) S.tone = "juno";
+  tone.value = S.tone;
   tone.onchange = () => { S.tone = tone.value; refresh(); };
+  const keys = Object.keys(TONES);
+  stepTone = (d) => { S.tone = keys[(keys.indexOf(S.tone) + d + keys.length) % keys.length]; tone.value = S.tone; refresh(); };
+  $("toneDn").onclick = () => stepTone(-1); $("toneUp").onclick = () => stepTone(1);
   const style = $("style"); Object.entries(STYLES).forEach(([k, t]) => style.add(new Option(t.label, k))); style.value = S.style;
   style.onchange = () => { S.style = style.value; curKey = undefined; hush(ac ? ac.currentTime : 0); retarget(); save(); };
   $("bpm").value = S.bpm; $("bpm").onchange = () => { S.bpm = Math.max(40, Math.min(240, +$("bpm").value || 110)); $("bpm").value = S.bpm; refresh(); };

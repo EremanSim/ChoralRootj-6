@@ -1037,7 +1037,7 @@ Tap **OPT** (printed GLO). One setting fills the screen:
 | **Version** | | | the firmware's version |
 | **Calibrate** | | | OCT+ starts the panel calibration ([Calibration](#calibration)) |
 | **Reset Settings** | | | OCT+ twice puts every setting back to its default (below) |
-| **Chord Set** | Off, 1 to 100 | Off | 1 to 100: a root key alone plays that chord set's chord, as on a Roland J-6; a chord key held still plays the chord block's chord ([docs/CHORD-SETS.md](CHORD-SETS.md)). Kept over a power-off; Reset Settings turns it Off |
+| **Chord Set** | Off, 1 to 100 | Off | 1 to 100: a root key plays that chord set's chord, as on a Roland J-6, and the chord block becomes the set's controls: F3 / G3 set −/+, F#3 / G#3 genre −/+, A3 / A#3 transpose −/+, B3 hold, C4 phrase on/off, C#4 next phrase ([docs/CHORD-SETS.md](CHORD-SETS.md)). Kept over a power-off; Reset Settings turns it Off |
 
 In SAFE MODE two more entries appear at the end, Safe Mode and Flash Data ([SAFE MODE](#safe-mode)).
 

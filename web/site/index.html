@@ -10,8 +10,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ChoralRoot FM-1</title>
-<meta name="description" content="ChoralRoot FM-1 : a chord instrument firmware for the M-VAVE FM-1, after the Telepathic Orchid. One hand plays roots, the other shapes chords. Version {{VERSION}}, GPL-3.0.">
+<title>ChoralRoot J-6</title>
+<meta name="description" content="ChoralRoot J-6: a chord instrument firmware for the M-VAVE FM-1 with 100 chord sets after the Roland AIRA J-6 chord set list. Untested on hardware. Version {{VERSION}}, GPL-3.0.">
 <meta name="theme-color" content="#080808">
 <link rel="preload" href="InterTight.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="site.css">
@@ -20,14 +20,54 @@
 
 <header class="title">
   <div class="wrap">
-    <h1><span>ChoralRoot</span> <span>FM-1</span></h1>
-    <p class="lede">A chord instrument for the M-VAVE FM-1 inspired by the Telepathic Orchid ORC—1.</p>
+    <h1><span>ChoralRoot</span> <span>J-6</span></h1>
+    <p class="lede">A chord instrument for the M-VAVE FM-1 with 100 chord sets after the Roland AIRA J-6. A fork of ChoralRoot FM-1.</p>
     <p class="ver">Version {{VERSION}}. GPL-3.0.</p>
   </div>
   <div class="stripes" aria-hidden="true"><i class="s-red"></i><i class="s-orange"></i><i class="s-cream"></i></div>
 </header>
 
 <main>
+
+<section class="warn" aria-labelledby="h-warn" style="padding-top: clamp(32px, 5vw, 64px)">
+  <div class="wrap">
+    <div style="border: 3px solid var(--yellow); padding: 20px 24px; max-width: 46em">
+      <h2 id="h-warn" style="color: var(--yellow); font-size: clamp(30px, 4.5vw, 52px)">Not tested on real hardware</h2>
+      <p>This J-6 modification was written by an AI (Claude, by Anthropic) at the request of the repository owner. Only automated tests and the in-browser emulator have checked it: it has <b>never run on an actual M-VAVE FM-1</b>. <b>Installing it is entirely at your own risk</b>; nobody is responsible for a damaged or bricked device or lost data. The browser player and the emulator below install nothing and are safe to try.</p>
+      <p lang="ru"><b>Не проверено на реальном железе.</b> Модификацию написал ИИ (Claude). Устанавливая прошивку, вы действуете на свой страх и риск. Браузерный плеер и эмулятор ничего не устанавливают.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sets" aria-labelledby="h-sets">
+  <div class="wrap">
+    <h2 id="h-sets">100 chord sets</h2>
+    <p class="intro">Each set gives the 12 keys a chord someone already voiced for a style: extensions, slash basses, voice-leading. Pop, Jazz, Neo Soul, Gospel, Lofi, Funk, House, Techno, Synthwave, EDM, Cinematic, Bossa Nova, Classical and more. One key, one finished chord.</p>
+    <div class="buttons">
+      <div class="cell">
+        <a class="btn b-green" href="j6/">Play the chord sets</a>
+        <p class="note">In the browser, no FM-1 needed: 24 sounds, strums, arpeggios and rhythms, a 16-step sequencer, MIDI. Keys A W S E D F T G Y H U J.</p>
+      </div>
+      <div class="cell">
+        <a class="btn b-cream" href="emu/">The whole firmware</a>
+        <p class="note">The FM-1 firmware in your browser: OPT, turn SELECT to the end, Chord Set, KNOB 1.</p>
+      </div>
+    </div>
+    <h3>On the FM-1</h3>
+    <p>Options (OPT, printed GLO) &gt; <b>Chord Set</b>, the last entry: 1 to 100 (Off: ChoralRoot's own chord keys). With a set on, the right 18 keys play its chords: D4 … C#5 the 12 chords as listed, D5 … G5 an octave up. The left nine keys become the set's controls, like the J-6's panel:</p>
+    <table class="grid">
+      <tr><th>Key</th><th>Job</th></tr>
+      <tr><td>F3 / G3</td><td>SET − / SET +</td></tr>
+      <tr><td>F#3 / G#3</td><td>GENRE − / GENRE + (the first set of the genre)</td></tr>
+      <tr><td>A3 / A#3</td><td>TRANSPOSE − / + (−12 … +12)</td></tr>
+      <tr><td>B3</td><td>HOLD: the chord keeps sounding (LATCH)</td></tr>
+      <tr><td>C4</td><td>PHRASE on / off (strum, arpeggio, pattern)</td></tr>
+      <tr><td>C#4</td><td>next PHRASE: Strum, Strum 2 Oct, Slop, Arp, Arp 2 Oct, Pattern, Harp</td></tr>
+    </table>
+    <p>KNOB 1 voices the chord, BASS plays the voicing's lowest note (a slash chord's bass), OCT− / OCT+ shift by octaves, PRESETS picks one of 144 sounds (OPT + PRESETS: the engine). The set is kept over a power-off.</p>
+    <p class="small">The sets follow the chord names and notes of the "Chord Set List" in the Roland J-6 owner's manual, used as a reference and an inspiration: chords and progressions are common musical material. No Roland code, firmware, samples, sounds or artwork are included; the engines and the code are this project's own (GPL-3.0). Not affiliated with, endorsed or sponsored by Roland Corporation. Roland, AIRA and J-6 are trademarks of Roland Corporation.</p>
+  </div>
+</section>
 
 <section class="shots" aria-labelledby="h-screen">
   <div class="wrap">
@@ -70,17 +110,18 @@
         <p class="note note-try"><a href="webapp/installer/manager.html?sim=1">Try it without an FM-1</a></p>
       </div>
       <div class="cell">
-        <a class="btn b-blue" href="https://github.com/Quixotic7/ChoralRootFM1">Source</a>
-        <p class="note">On GitHub, GPL-3.0. Created by Quixotic7, building off of Felucca by Hügelton Instruments.</p>
+        <a class="btn b-blue" href="https://github.com/EremanSim/ChoralRootj-6">Source</a>
+        <p class="note">On GitHub, GPL-3.0. The J-6 fork of <a href="https://github.com/Quixotic7/ChoralRootFM1">ChoralRoot FM-1</a> by Quixotic7, building off of Felucca by Hügelton Instruments.</p>
       </div>
       <div class="cell">
         <a class="btn b-yellow" href="#playing">Manual</a>
-        <p class="note">Who needs this? The short version starts below; <a href="https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/MANUAL.md">the full manual</a> has every button, knob and option.</p>
+        <p class="note">Who needs this? The short version starts below; <a href="https://github.com/EremanSim/ChoralRootj-6/blob/main/docs/MANUAL.md">the full manual</a> has every button, knob and option.</p>
       </div>
     </div>
     <p>The installer talks to the FM-1 over Web MIDI. The firmware it runs now (stock, Felucca, Melodee or ChoralRoot) stages the update loader, the loader writes the whole image, then the FM-1 restarts and reports {{PRODUCT}}. An update saves a backup first and keeps your settings, sounds and loops. Charge the FM-1 fully first: it writes on its battery, and the installer cannot read its charge. Plug it straight into the computer (no hub), keep the computer awake and leave the cable alone until the installer says Done. If an update is cut off anyway, <a href="#recovery">Recovery</a> has the way back.</p>
     <p>On the command line, from the source: <code class="cmd">pip3 install mido python-rtmidi</code>, then <code class="cmd">python3 tools/fm1_install.py <span class="nw">{{PKG}}</span></code>. <code>--info</code> prints the connected FM-1's identity.</p>
     <nav class="toc" aria-label="Sections">
+      <a href="#h-sets">Chord sets</a>
       <a href="#playing">Playing</a>
       <a href="#editor">The sound editor</a>
       <a href="#sounds">Sounds</a>
@@ -162,12 +203,12 @@
     </table>
 
     <h3>The looper</h3>
-    <p>It records chords, not audio, so a playing loop follows the sound you choose now, the voicing on KNOB 1, the performance mode and the bass. On a new FM-1, tap REC and play: the first chord starts the take, REC or LOOP ends it, and the loop plays at once. The <b>PLAY menu</b> (LOOP held) has ten slots, five record modes (Overwrite, Advance, Overdub, Replace, Step) and the length of the next take: Free, or 1, 2, 4, 8 or 16 bars after a count-in. A slot keeps its loop: it is saved when the loop stops, and is still there after switching off. <a href="https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/MANUAL.md#10-the-looper">The looper in the manual.</a></p>
+    <p>It records chords, not audio, so a playing loop follows the sound you choose now, the voicing on KNOB 1, the performance mode and the bass. On a new FM-1, tap REC and play: the first chord starts the take, REC or LOOP ends it, and the loop plays at once. The <b>PLAY menu</b> (LOOP held) has ten slots, five record modes (Overwrite, Advance, Overdub, Replace, Step) and the length of the next take: Free, or 1, 2, 4, 8 or 16 bars after a count-in. A slot keeps its loop: it is saved when the loop stops, and is still there after switching off. <a href="https://github.com/EremanSim/ChoralRootj-6/blob/main/docs/MANUAL.md#10-the-looper">The looper in the manual.</a></p>
 
     <div class="cols">
       <div>
         <h3>Options</h3>
-        <p>OPT tap opens them, one setting per screen. SELECT steps through the settings, KNOB 1 sets the value, and OPT, HOME or OCT− leaves. Play Style (Simple / Advanced / Free), Extension Addition, Secret Chords, Velocity, Bass Behaviour, Single Notes, Split Point, the MIDI Perform / Bass / Raw Chord channels, Raw Chord Sound, MIDI Clock, View, Motion, LEDs, Hold Time, USB Record, USB Level, Dual Core, Version, Calibrate. <a href="https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/MANUAL.md#14-options">The manual</a> says what each one does.</p>
+        <p>OPT tap opens them, one setting per screen. SELECT steps through the settings, KNOB 1 sets the value, and OPT, HOME or OCT− leaves. Play Style (Simple / Advanced / Free), Extension Addition, Secret Chords, Velocity, Bass Behaviour, Single Notes, Split Point, the MIDI Perform / Bass / Raw Chord channels, Raw Chord Sound, MIDI Clock, View, Motion, LEDs, Hold Time, USB Record, USB Level, Dual Core, Version, Calibrate. <a href="https://github.com/EremanSim/ChoralRootj-6/blob/main/docs/MANUAL.md#14-options">The manual</a> says what each one does.</p>
         <p><b>Dual Core</b> is Off by default in 0.16: one core, as the stock firmware runs. On (after a restart) gives the bass the chip's second core and its own voices; it is the first thing to turn off if an FM-1 ever crashes or resets while playing.</p>
       </div>
       <div>
@@ -188,7 +229,7 @@
       <figcaption>EDIT tapped on WARM PAD, a VA sound. The buttons become OSC FILT ENV LFO / MOD FX MIX and SHIFT; KNOB 1–4 are WAVE LEVEL COARSE FINE of OSC 1; SELECT steps the lane.</figcaption>
     </figure>
     <h3>Groups</h3>
-    <p>The buttons become seven groups. The top row is the signal flow (OSC on the printed FX, FILT on SEL, ENV, LFO), the bottom row the output stage (MOD on SEQ, FX on PLAY, MIX on REC). A group's button opens the group; tapped again, its next screen. Every engine fills the same groups with its own screens; <a href="https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/MANUAL.md#12-the-sound-editor">the manual</a> lists them engine by engine.</p>
+    <p>The buttons become seven groups. The top row is the signal flow (OSC on the printed FX, FILT on SEL, ENV, LFO), the bottom row the output stage (MOD on SEQ, FX on PLAY, MIX on REC). A group's button opens the group; tapped again, its next screen. Every engine fills the same groups with its own screens; <a href="https://github.com/EremanSim/ChoralRootj-6/blob/main/docs/MANUAL.md#12-the-sound-editor">the manual</a> lists them engine by engine.</p>
 
     <div class="cols cols-fig">
       <div>
@@ -260,7 +301,7 @@
       </div>
     </div>
     <h3>USB recording</h3>
-    <p>The computer sees an audio input, <b>ChoralRoot In</b>: class compliant, no driver, six channels at 44.1 kHz. Channels 1–2 are the master (what you hear, without the metronome click), 3–4 the chord sound alone and 5–6 the bass sound alone, both before the reverb, chorus and delay. The computer cannot play audio through the FM-1, and there is no Bluetooth MIDI. <a href="https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/MANUAL.md#15-midi-and-usb">MIDI and USB in the manual.</a></p>
+    <p>The computer sees an audio input, <b>ChoralRoot In</b>: class compliant, no driver, six channels at 44.1 kHz. Channels 1–2 are the master (what you hear, without the metronome click), 3–4 the chord sound alone and 5–6 the bass sound alone, both before the reverb, chorus and delay. The computer cannot play audio through the FM-1, and there is no Bluetooth MIDI. <a href="https://github.com/EremanSim/ChoralRootj-6/blob/main/docs/MANUAL.md#15-midi-and-usb">MIDI and USB in the manual.</a></p>
   </div>
 </section>
 
@@ -270,10 +311,10 @@
     <p class="intro">From 0.16 on, ChoralRoot checks at every start that its firmware was written completely. The installer's <b>Return to official V15</b> puts M-VAVE's firmware back.</p>
     <p><b>If an update is interrupted</b> (the cable, the battery, the computer going to sleep): switch the FM-1 off and on again. Some of the key lights flash three short times and the screen stays black: the FM-1 is in update mode. Open <a href="webapp/installer/">the installer</a> and press Install again; it finishes the write. If only the computer side stopped while the FM-1 stayed on, it is still in update mode: replug the cable and press Install again. The update <b>to</b> 0.16 from an older version is the last one without this protection during its first second.</p>
     <p><b>Update mode on purpose:</b> hold OCT− alone while switching on. Three short flashes and a black screen: open the installer and Install, or switch off and on to start ChoralRoot again (nothing was written). The gesture is new in 0.16; recovery after an interrupted update does not depend on the key.</p>
-    <p><b>If the FM-1 stays dark</b> (a black screen with a disk named <code>WL82 UBOOT1.00</code> on the computer, or nothing on USB at all): do not format the disk. Follow "If the FM-1 no longer starts" in the <a href="https://github.com/Quixotic7/ChoralRootFM1#install">README</a> and the checklist in <a href="https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/INSTALL-COMPAT.md">INSTALL-COMPAT.md</a>, which lead to <a href="https://github.com/Quixotic7/MvaveFM1Unbricker">MvaveFM1Unbricker</a>.</p>
+    <p><b>If the FM-1 stays dark</b> (a black screen with a disk named <code>WL82 UBOOT1.00</code> on the computer, or nothing on USB at all): do not format the disk. Follow "If the FM-1 no longer starts" in the <a href="https://github.com/EremanSim/ChoralRootj-6#readme">README</a> and the checklist in <a href="https://github.com/EremanSim/ChoralRootj-6/blob/main/docs/INSTALL-COMPAT.md">INSTALL-COMPAT.md</a>, which lead to <a href="https://github.com/Quixotic7/MvaveFM1Unbricker">MvaveFM1Unbricker</a>.</p>
     <p><b>Back to the stock firmware:</b> download the official FM-1 V15 firmware (<code>FM-1.fwsc</code>) yourself from <a href="https://www.m-vave.com/download">M-VAVE's downloads page</a> and select it in the installer. The browser checks its size and SHA-256 locally (the file is never uploaded), saves a backup first and installs it the same way. On the command line: <code class="cmd">python3 tools/fm1_install.py <span class="nw">FM-1.fwsc</span></code>.</p>
     <p><b>Back up</b> on the installer page saves everything stored on the FM-1 (the settings, the 32 saved sounds with their patches, the ten loops, the FM6 voice bank and the CZ-1 banks) to one <code>.json</code> file, and <b>Restore</b> writes it back. Single sounds travel as files from its <b>Sounds</b> section, or with the <a href="webapp/installer/manager.html">device manager</a>.</p>
-    <p class="small">SAFE MODE, the panel calibration and one long flash instead of three: <a href="https://github.com/Quixotic7/ChoralRootFM1/blob/main/docs/MANUAL.md#16-updating-and-recovery">Updating and recovery in the manual</a>.</p>
+    <p class="small">SAFE MODE, the panel calibration and one long flash instead of three: <a href="https://github.com/EremanSim/ChoralRootj-6/blob/main/docs/MANUAL.md#16-updating-and-recovery">Updating and recovery in the manual</a>.</p>
   </div>
 </section>
 
@@ -281,6 +322,7 @@
   <div class="wrap">
     <h2 id="credits">Credits and licence</h2>
     <p class="intro">ChoralRoot was made by Quixotic7 with the assistance of his AI Overlords: Claude Fable 5.1 and Claude Opus 5.5. ChoralRoot is free, don't like something, feel free to make your own version. ChoralRoot FM-1 is free software under the GNU General Public License, version 3 only: <a href="firmware/LICENSE">LICENSE</a>. The package and this site carry <a href="firmware/LICENSING.md">LICENSING.md</a> and the licence texts in <a href="firmware/LICENSES/">LICENSES</a>.</p>
+    <p>The J-6 fork (the 100 chord sets, the SET block, the browser chord player) was written by Claude (Anthropic) for <a href="https://github.com/EremanSim">EremanSim</a>, and has not been tested on hardware.</p>
     <ul class="credit-list">
       <li><b>Felucca</b> by Leo Kuroshita (@kurogedelic), <a href="https://hugelton.com">Hügelton Instruments</a>: the platform, the engines, the installer, the update loader; with its CrispyZebra waveforms (the PHASE engine) and its Fukiai icons (MIT). <a href="https://github.com/hugelton/Felucca">github.com/hugelton/Felucca</a></li>
       <li><b>Melodee</b> by Kerem Kilic (Ellic Studio), GPL-3.0: the FM6 engine as it plays here (DX7 voices as Dexed renders them), the CZ-1 engine, the USB audio recording, and the work that makes the second core robust. <a href="https://github.com/keremimo/melodee">github.com/keremimo/melodee</a></li>
@@ -299,7 +341,8 @@
   <div class="stripes stripes-thin" aria-hidden="true"><i class="s-red"></i><i class="s-orange"></i><i class="s-cream"></i></div>
   <div class="wrap">
     <p>ChoralRoot FM-1 is completely independent of and not affiliated in any way with Telepathic Instruments, M-VAVE or Cuvave. Orchid ORC—1, M-VAVE and FM-1 are trademarks of their respective owners. A real ORC—1 will be much better than this will ever be due to it's physical interface</p>
-    <p><b>Installing this firmware is entirely at your own risk. Quixotic7 is not responsible for any damages to your M-VAVE FM-1 hardware</b></p>
+    <p>ChoralRoot J-6 is not affiliated with, endorsed or sponsored by Roland Corporation. Roland, AIRA and J-6 are trademarks of Roland Corporation.</p>
+    <p><b>Not tested on real hardware. Installing this firmware is entirely at your own risk. Neither Quixotic7 nor the J-6 fork's author is responsible for any damage to your M-VAVE FM-1 hardware</b></p>
   </div>
 </footer>
 

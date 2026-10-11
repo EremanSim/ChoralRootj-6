@@ -6,6 +6,7 @@
  * BPM rephasing. Integer only, no allocation, no libc: one cr_t holds everything. CR_ENGINE.md has the
  * API, the timing model and the provenance of every table. Design references are to choralroot design.md. */
 #include "cr_engine.h"
+#include "cr_chordsets.h"    /* the 100 chord sets (tools/gen_chordsets.py) */
 
 /* ============================================================ tables === */
 
@@ -229,6 +230,67 @@ int cr_voice_apply(const uint8_t *base, int n, int k, uint8_t out[CR_CHORD_MAX])
     return n;
 }
 
+/* ======================================================= chord sets === */
+#define CR_SET_HOME 62           /* D4: the keys D4..C#5 play a set's voicings as listed (docs/CHORD-SETS.md) */
+
+static int crx_floor12(int v) { return v >= 0 ? v / 12 : -((11 - v) / 12); }
+
+/* a name with its note letters moved by tr semitones (the root, and a slash chord's bass: "/" + A..G), sharps */
+static void crx_set_name_tr(const char *src, int tr, char *d, int max)
+{
+    int i = 0, j = 0, at = 1;
+    tr = crx_mod(tr, 12);
+    while (src[i] && j < max - 1) {
+        char ch = src[i];
+        if (at && tr && ch >= 'A' && ch <= 'G') {
+            static const uint8_t PCS[7] = { 9, 11, 0, 2, 4, 5, 7 };   /* A..G */
+            int pc = PCS[ch - 'A'], k;
+            const char *n;
+            i++;
+            if (src[i] == '#') { pc++; i++; } else if (src[i] == 'b') { pc--; i++; }
+            n = CR_NOTE_NAMES[crx_mod(pc + tr, 12)];
+            for (k = 0; n[k] && j < max - 1; k++) d[j++] = n[k];
+            at = 0;
+            continue;
+        }
+        at = ch == '/';
+        d[j++] = ch;
+        i++;
+    }
+    d[j] = 0;
+}
+
+int cr_chord_set_chord(int set, int key, int tr, uint8_t out[CR_CHORD_MAX], char name[CR_CHORD_SET_NAME])
+{
+    const uint8_t *t;
+    int i, n = 0, sh;
+    if (name) name[0] = 0;
+    if (set < 1 || set > CR_NSETS || key < 0 || key > 127) return 0;
+    t = CR_SET_NOTE[set - 1][key % 12];
+    sh = 12 * crx_floor12(key - CR_SET_HOME) + tr;
+    for (i = 0; i < CR_SET_NOTES && t[i]; i++) {
+        int nn = t[i] + sh;
+        if (nn >= 0 && nn <= 127 && n < CR_CHORD_MAX) out[n++] = (uint8_t)nn;
+    }
+    if (name) crx_set_name_tr(CR_SET_NAME[set - 1][key % 12], tr, name, CR_CHORD_SET_NAME);
+    return n;
+}
+
+const char *cr_chord_set_genre(int set)
+{
+    return set >= 1 && set <= CR_NSETS ? CR_SET_GENRES[CR_SET_GENRE[set - 1]] : "";
+}
+
+/* a voice of set cs on its key (v->root): its notes (the voice's transpose in), quality CR_Q_SET, the bass pitch
+ * class: the voicing's lowest note's (a slash chord's bass), untransposed as v->pc is */
+static void crx_set_voice(cr_voice_t *v, int cs)
+{
+    v->cs = (uint8_t)cs;
+    v->rq = CR_Q_SET;
+    v->nbase = (uint8_t)cr_chord_set_chord(cs, v->root, v->transpose, v->base, 0);
+    v->pc = (uint8_t)(v->nbase ? crx_mod(v->base[0] - v->transpose, 12) : v->pc_pressed);
+}
+
 /* Secret Chords (design.md 6.3): the two most-recently-held Chord Types map to a secret quality when the
  * scope allows it for this Play Style, else 0. Types firmware-confirmed; the combo map is a Choralroot
  * choice (provisional: min+sus -> min4 inferred). Modifiers stack normally; nothing is consumed. */
@@ -268,6 +330,11 @@ static void crx_snapshot_spec(const cr_t *c, uint8_t *sq, uint8_t *sx)
 static void crx_build_base(const cr_t *c, cr_voice_t *v)
 {
     int q = v->sq, root = v->note_pressed, pc = v->pc_pressed;
+    if (v->cs && !v->sq && !v->sx && !v->zone) {   /* a chord set's chord: no chord key in the spec */
+        v->root = (int16_t)root;
+        crx_set_voice(v, v->cs);
+        return;
+    }
     if (c->key_on && !c->key_notes && !v->zone) {   /* (Key plays Notes, the Full keyboard, a bass-side key: no chord) */
         int e = CR_KEYMAP[c->scale][crx_mod(v->pc_pressed - c->tonic, 12)], sh = e >> 3;
         if (sh == 1) { root--; pc = crx_mod(pc - 1, 12); }
@@ -644,8 +711,11 @@ static void crx_disp_snapshot(cr_t *c, const cr_voice_t *v)
     int i;
     c->disp_valid = 1;
     c->disp_q = v->rq;
-    c->disp_x = v->rq ? v->sx : 0;
+    c->disp_x = v->rq && v->rq != CR_Q_SET ? v->sx : 0;
     c->disp_pc = (uint8_t)crx_mod(v->root + v->transpose, 12);
+    c->disp_cs = (uint8_t)(v->rq == CR_Q_SET ? v->cs : 0);
+    c->disp_key = (uint8_t)v->root;
+    c->disp_tr = v->transpose;
     c->disp_n = v->nnotes;
     for (i = 0; i < v->nnotes; i++) c->disp_notes[i] = v->notes[i];
 }
@@ -666,8 +736,11 @@ static void crx_gesture(cr_t *c, int vi, int on)
 {
     const cr_voice_t *v = &c->v[vi];
     if (!c->out.gesture || !v->used || v->loop) return;
-    c->out.gesture(c->out.ud, v->gid, (int16_t)(v->root + v->transpose), v->rq,
-                   (uint8_t)(v->zone & CR_Z_BASS ? CR_GX_BASS : v->sx), v->vel, on);   /* (a bass-side key: q, sx 0) */
+    if (v->rq == CR_Q_SET)       /* a chord set's: its key (a loop plays it through the set and the transpose of then) */
+        c->out.gesture(c->out.ud, v->gid, v->root, CR_Q_SET, 0, v->vel, on);
+    else
+        c->out.gesture(c->out.ud, v->gid, (int16_t)(v->root + v->transpose), v->rq,
+                       (uint8_t)(v->zone & CR_Z_BASS ? CR_GX_BASS : v->sx), v->vel, on);   /* (a bass-side key: q, sx 0) */
 }
 
 static void crx_kill_voice(cr_t *c, int vi)
@@ -694,7 +767,7 @@ static void crx_note_last_chord(cr_t *c, int vi)
     c->last_chord.used = 1;
     c->last_chord.root = v->root;
     c->last_chord.q = v->rq;
-    c->last_chord.x = v->sx;
+    c->last_chord.x = v->rq == CR_Q_SET ? v->cs : v->sx;   /* (a set's chord: the set) */
     c->last_chord.vel = v->vel;
     if (c->rec_slot >= 0) c->rec_played = 1;
     c->disp_vi = (uint8_t)vi;
@@ -723,6 +796,7 @@ static int crx_start_voice(cr_t *c, int key, int id, int vel, int pc_pressed, in
     v->transpose = c->transpose;
     v->sq = (uint8_t)sq; v->sx = (uint8_t)sx; v->is_free = (uint8_t)is_free;
     v->zone = (uint8_t)zone;
+    v->cs = (uint8_t)(zone ? 0 : c->chord_set);
     v->serial = ++c->serial;
     v->gid = ++c->gid;
     crx_build_base(c, v);
@@ -904,6 +978,7 @@ void cr_init(cr_t *c, const cr_out_t *out)
     c->rng = 0x2545F491u;
     c->rec_slot = -1;
     c->disp_vi = CR_NONE;
+    c->chord_set_last = 1;
 }
 
 void cr_seed(cr_t *c, uint32_t seed) { c->rng = seed ? seed : 0x2545F491u; }
@@ -1143,6 +1218,11 @@ void cr_set_keyboard(cr_t *c, int full, int split_note)
     c->split_note = (uint8_t)crx_clamp(split_note, 0, 127);
 }
 void cr_set_bass(cr_t *c, int enabled) { c->bass_on = (uint8_t)(enabled != 0); }
+void cr_set_chord_set(cr_t *c, int set)
+{
+    c->chord_set = (uint8_t)crx_clamp(set, 0, CR_NSETS);
+    if (c->chord_set) c->chord_set_last = c->chord_set;
+}
 void cr_set_bass_mode(cr_t *c, cr_bassmode_t m) { if ((int)m >= CR_BASS_CHORDS_ONLY && (int)m <= CR_BASS_SOLO) c->bass_mode = (uint8_t)m; }
 void cr_set_stream(cr_t *c, cr_stream_t s, int enabled) { if ((int)s >= 0 && (int)s < CR_NSTREAM) c->stream_on[s] = (uint8_t)(enabled != 0); }
 
@@ -1246,7 +1326,8 @@ void cr_pad_down(cr_t *c, int slot)
     v->root = d->root;
     v->serial = ++c->serial;
     v->gid = ++c->gid;
-    v->nbase = (uint8_t)cr_chord_base(d->root + v->transpose, d->q, d->x, v->base);
+    if (d->q == CR_Q_SET) { v->sq = v->sx = 0; crx_set_voice(v, d->x); }   /* a chord set's chord: x = the set */
+    else v->nbase = (uint8_t)cr_chord_base(d->root + v->transpose, d->q, d->x, v->base);
     v->nnotes = (uint8_t)cr_voice_apply(v->base, v->nbase, c->voicing, v->notes);
     crx_sound_voice(c, vi);
     if (crx_bass_ok(c, v)) crx_bass_start(c, v);
@@ -1279,8 +1360,8 @@ void cr_pad_set(cr_t *c, int slot, int used, int16_t root, uint8_t q, uint8_t ex
     d = &c->pads[slot];
     d->used = (uint8_t)(used != 0);
     d->root = root;
-    d->q = q < CR_Q_COUNT ? q : 0;
-    d->x = (uint8_t)(ext & 15u);
+    d->q = q <= CR_Q_SET ? q : 0;
+    d->x = (uint8_t)(q == CR_Q_SET ? crx_clamp(ext, 1, CR_NSETS) : (int)(ext & 15u));
     d->vel = (uint8_t)crx_clamp(vel, 1, 127);
 }
 
@@ -1297,7 +1378,7 @@ int cr_loop_event(cr_t *c, int lv, int16_t root, uint8_t q, uint8_t ext, uint8_t
     if (lv < 0 || lv >= CR_MAX_LOOPV) return 0;
     if (c->v[vi].used) crx_kill_voice(c, vi);
     if (!on) return 0;
-    if (q >= CR_Q_COUNT || (ext & CR_GX_BASS)) q = CR_Q_NONE;
+    if (q > CR_Q_SET || (ext & CR_GX_BASS)) q = CR_Q_NONE;
     root = (int16_t)crx_clamp(root, 0, 127);
     v = &c->v[vi];
     crx_zero(v, sizeof *v);
@@ -1311,7 +1392,13 @@ int cr_loop_event(cr_t *c, int lv, int16_t root, uint8_t q, uint8_t ext, uint8_t
     v->sq = v->rq = q; v->sx = (uint8_t)(ext & 15u);
     v->root = root;
     v->serial = ++c->serial;
-    v->nbase = (uint8_t)cr_chord_base(root, q, v->sx, v->base);
+    if (q == CR_Q_SET) {             /* a chord set's chord, recorded as its key: the set on now (off: the last one on)
+                                      * and today's transpose (a pad's way) */
+        v->sq = v->sx = 0;
+        v->transpose = c->transpose;
+        crx_set_voice(v, c->chord_set ? c->chord_set : c->chord_set_last);
+    } else
+        v->nbase = (uint8_t)cr_chord_base(root, q, v->sx, v->base);
     v->nnotes = (uint8_t)cr_voice_apply(v->base, v->nbase, v->zone ? 0 : c->voicing, v->notes);
     crx_sound_voice(c, vi);
     if (crx_bass_ok(c, v)) crx_bass_start(c, v);
@@ -1367,6 +1454,30 @@ void cr_note_name(uint8_t note, char buf[5])
     buf[i] = 0;
 }
 
+/* a chord set's name -> the screen's three parts: the root ("C", "F#"), a minor / dim mark as the quality ("m", "dim"),
+ * the rest as the superscript, spaces out ("Abm6 add b13": "Ab" "m" "6addb13"); root_pc: the name's root */
+static void crx_set_name_split(const char *nm, cr_chord_info_t *ci)
+{
+    static const uint8_t PCS[7] = { 9, 11, 0, 2, 4, 5, 7 };
+    int i = 0, j = 0, pc = 0;
+    if (nm[0] >= 'A' && nm[0] <= 'G') {
+        pc = PCS[nm[0] - 'A'];
+        ci->root[j++] = nm[i++];
+        if (nm[i] == '#' || nm[i] == 'b') { pc += nm[i] == '#' ? 1 : -1; ci->root[j++] = nm[i++]; }
+        ci->root_pc = (uint8_t)crx_mod(pc, 12);
+    }
+    ci->root[j] = 0;
+    j = 0;
+    if (nm[i] == 'm' && !(nm[i + 1] == 'a' && nm[i + 2] == 'j')) ci->qual[j++] = nm[i++];
+    else if ((nm[i] == 'd' || nm[i] == 'D') && nm[i + 1] == 'i' && nm[i + 2] == 'm') {
+        ci->qual[j++] = 'd'; ci->qual[j++] = 'i'; ci->qual[j++] = 'm'; i += 3;
+    }
+    ci->qual[j] = 0;
+    for (j = 0; nm[i] && j < CR_SUP_MAX - 1; i++)
+        if (nm[i] != ' ') ci->sup[j++] = nm[i];
+    ci->sup[j] = 0;
+}
+
 void cr_chord_info(const cr_t *c, cr_chord_info_t *ci)
 {
     int i;
@@ -1376,16 +1487,27 @@ void cr_chord_info(const cr_t *c, cr_chord_info_t *ci)
         ci->valid = 1; ci->sounding = 1;
         ci->root_pc = (uint8_t)crx_mod(v->root + v->transpose, 12);
         ci->quality = v->rq;
-        ci->ext = v->rq ? v->sx : 0;
+        ci->ext = v->rq && v->rq != CR_Q_SET ? v->sx : 0;
+        ci->set = (uint8_t)(v->rq == CR_Q_SET ? v->cs : 0);
+        ci->root_pc = (uint8_t)crx_mod(v->root + v->transpose, 12);
         ci->nnotes = v->nnotes;
         for (i = 0; i < v->nnotes; i++) ci->notes[i] = v->notes[i];
     } else if (c->disp_valid) {
         ci->valid = 1;
         ci->root_pc = c->disp_pc; ci->quality = c->disp_q; ci->ext = c->disp_x;
+        ci->set = c->disp_cs;
         ci->nnotes = c->disp_n;
         for (i = 0; i < c->disp_n; i++) ci->notes[i] = c->disp_notes[i];
     } else {
         ci->root[0] = ci->qual[0] = ci->sup[0] = 0;
+        return;
+    }
+    if (ci->quality == CR_Q_SET) {   /* a chord set's: its own name, split for the screen */
+        const cr_voice_t *v = c->disp_vi != CR_NONE && c->v[c->disp_vi].used ? &c->v[c->disp_vi] : 0;
+        uint8_t tmp[CR_CHORD_MAX];
+        char nm[CR_CHORD_SET_NAME];
+        cr_chord_set_chord(ci->set, v ? v->root : c->disp_key, v ? v->transpose : c->disp_tr, tmp, nm);
+        crx_set_name_split(nm, ci);
         return;
     }
     ci->secret = ci->quality >= CR_Q_AUG;

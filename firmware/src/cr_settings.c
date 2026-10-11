@@ -379,6 +379,7 @@ static void css_sanitize(cr_session_t *x)
     if (x->bass_on > 1u) x->bass_on = 0;
     if (x->lock > 1u) x->lock = 0;
     if (!x->lock) x->latched = 0;                  /* (the latch belongs to LOCK) */
+    if (x->chord_set > CR_NCHORDSET) x->chord_set = 0;
     if (x->fx.version != CSS_FX_VERSION || x->fx.n > (uint32_t)CSS_NFXP)
         css_fx_defaults(&x->fx);                   /* another layout of the FX block: the sounds' own sends, the
                                                     * effects' defaults */
@@ -801,6 +802,7 @@ static void css_capture(cr_session_t *x)
     x->bass_on = cs.bass_on != 0u;
     x->lock = cu.clock != 0u;
     x->latched = x->lock ? cu.mlatch : 0u;
+    x->chord_set = cs.chord_set;
     x->fx.sel = CSS_FXS[cu_fx_pg()];
     for (i = 0; i < CU_NFX; i++)
         x->fx.amt[CSS_FXE[i]] = (uint8_t)(cs.fx_amt[i] & 127u);
@@ -836,9 +838,11 @@ static void css_apply(const cr_session_t *x)
     cu_fx_apply();
     fm1_irq_off();
     cr_voicing_step(&cr, x->voicing - cr.voicing);
+    cr_set_chord_set(&cr, x->chord_set);
     if (x->bass_on)
         cr_set_bass(&cr, 1);
     fm1_irq_on();
+    cs.chord_set = x->chord_set;
     cu.octave = x->octave;                         /* (cu_post_kbd follows: the split key's note moves with it) */
     if (x->bass_on) {                              /* v15: the bass comes back on, on its sound (ALGORITHM's place:
                                                     * cu_pos_sync) */
@@ -1141,6 +1145,8 @@ static void cr_settings_reset(void)
     cu_pool_load(1, ENGI_VA, cu_pool_find(ENGI_VA, "DEEP SUB"));
     cs.bass_sound = 0;                             /* ALGORITHM at OFF: the bass off */
     cs.bass_on = 0;
+    cs.chord_set = 0;                              /* Chord Set Off (the session's) */
+    cr_post(CRE_CHORDSET, 0, 0, 0);
     cr_settings_load();
     cu_loop_conf();                                /* the looper's options and the metronome -> the ISR */
     cu_usb_apply();                                /* USB Record on again, if it was off (usb.c) */

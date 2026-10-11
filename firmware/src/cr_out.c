@@ -374,6 +374,7 @@ enum {
     CRE_SINGLE,       /* a: cr_single_t, v: split point 0..11 */
     CRE_KEYPLAYS,     /* v: Key plays 0 Chords, 1 Notes */
     CRE_KEYBOARD,     /* a: 1 the Full keyboard, v: the split key's MIDI note */
+    CRE_CHORDSET,     /* v: the chord set 0..100 (0 off) */
     CRE_LOOP          /* a: LP_*, b / v: its argument */
 };
 /* CRE_LOOP's operations */
@@ -467,6 +468,7 @@ static void cr_apply(const cr_ev_in_t *e)
     case CRE_SINGLE: cr_set_single_notes(&cr, (cr_single_t)e->a, e->v); break;
     case CRE_KEYPLAYS: cr_set_key_plays(&cr, e->v); break;
     case CRE_KEYBOARD: cr_set_keyboard(&cr, e->a, e->v); break;
+    case CRE_CHORDSET: cr_set_chord_set(&cr, e->v); break;
     case CRE_LOOP: cr_loop_op(e); break;
     default: break;
     }

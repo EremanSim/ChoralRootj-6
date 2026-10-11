@@ -202,7 +202,7 @@ static void crl_write(cr_loop_t *lp, uint32_t t0, int16_t root, uint8_t q, uint8
     e->dur = (uint16_t)dur;
     e->root = (uint8_t)(root < 0 ? 0 : root > 127 ? 127 : root);
     e->vel = (uint8_t)(vel ? vel : 1u);
-    if (q >= CR_Q_COUNT) q = 0;
+    if (q > CR_Q_SET) q = 0;                          /* (CR_Q_SET: a chord set's chord, root its key) */
     /* a single note has no extensions: its nibble is its part (the gesture's CR_GX_BASS: a Split Bass bass-side key) */
     e->qx = (uint8_t)(q << 4 | (q ? ext & 15u : ext & CR_GX_BASS ? CRL_X_BASS : 0u));
     e->layer = lp->d.nlayers;
@@ -804,7 +804,7 @@ int cr_loop_unpack(const uint8_t *buf, uint32_t n, crl_data_t *d)
                                                       * record's nibble: the extension keys held, never heard) */
                 e->qx = (uint8_t)(buf[7] & CRL_RF_PART ? e->qx & CRL_X_BASS : 0u);
             e->layer = (uint8_t)l;
-            if (e->t >= len || !e->dur || e->root > 127u || !e->vel || e->vel > 127u || (e->qx >> 4) >= CR_Q_COUNT) {
+            if (e->t >= len || !e->dur || e->root > 127u || !e->vel || e->vel > 127u || (e->qx >> 4) > CR_Q_SET) {
                 crl_zero(d, crl_data_size(0));
                 return 0;
             }

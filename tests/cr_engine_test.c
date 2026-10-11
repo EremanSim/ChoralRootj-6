@@ -555,6 +555,75 @@ static void s_pads(void)
     ok(nlog == 0, "chord pads: an empty pad plays nothing");
 }
 
+/* chord sets (docs/CHORD-SETS.md): a key plays its set's chord, moved by octaves from D4..C#5, a chord key overrides */
+static void s_chordsets(void)
+{
+    cr_chord_info_t ci;
+    int16_t root; uint8_t q, x, vel, nt[CR_CHORD_MAX];
+    char nm[CR_CHORD_SET_NAME];
+    int k, set, bad = 0;
+    fresh("chord sets");
+    for (set = 1; set <= CR_NCHORDSET; set++)
+        for (k = 0; k < 12; k++) {
+            int n = cr_chord_set_chord(set, 62 + k, 0, nt, nm), i;
+            if (n < 2 || n > 4 || !nm[0]) bad++;
+            for (i = 1; i < n; i++) if (nt[i] <= nt[i - 1]) bad++;
+        }
+    ok(!bad, "chord sets: 100 x 12 chords, 2..4 notes each, low to high, every one named");
+    ok(!strcmp(cr_chord_set_genre(1), "Pop") && !strcmp(cr_chord_set_genre(3), "Jazz") && !strcmp(cr_chord_set_genre(100), "Modern")
+       && !strcmp(cr_chord_set_genre(0), "") && !strcmp(cr_chord_set_genre(101), ""), "chord sets: genres");
+    cr_set_chord_set(&C, 1);
+    K(72, 1);
+    expect("+48 +55 +62 +64", "chord sets: set 1, C (C5, in D4..C#5): Cadd9 as listed");
+    cr_chord_info(&C, &ci);
+    ok(ci.valid && ci.quality == CR_Q_SET && ci.set == 1 && !strcmp(ci.root, "C") && !strcmp(ci.qual, "") &&
+       !strcmp(ci.sup, "add9") && !ci.secret && ci.nnotes == 4, "chord sets: the shown name is the set's (C add9)");
+    R(72, 1);
+    expect("-48 -55 -62 -64", "chord sets: release");
+    cr_chord_info(&C, &ci);
+    ok(ci.valid && !ci.sounding && ci.set == 1 && !strcmp(ci.sup, "add9"), "chord sets: the last chord stays shown");
+    K(60, 1); R(60, 1);
+    expect("+36 +43 +50 +52 -36 -43 -50 -52", "chord sets: an octave below (C4) plays it an octave lower");
+    K(74, 1); R(74, 1);
+    expect("+62 +69 +72 +77 -62 -69 -72 -77", "chord sets: D5: Dm7 an octave up");
+    K(73, 1);
+    cr_chord_info(&C, &ci);
+    ok(!strcmp(ci.root, "C#") && !strcmp(ci.sup, "M9/C") && ci.notes[0] == 49, "chord sets: C#5: C#M9/C as listed");
+    R(73, 1); clear();
+    cr_set_transpose(&C, 1);
+    K(73, 1);
+    cr_chord_info(&C, &ci);
+    ok(!strcmp(ci.root, "D") && !strcmp(ci.sup, "M9/C#") && ci.notes[0] == 50, "chord sets: transposed +1: DM9/C# a semitone up");
+    R(73, 1); cr_set_transpose(&C, 0); clear();
+    MD(CR_MOD_MIN); K(62, 1); R(62, 1); MU(CR_MOD_MIN);
+    expect("+62 +65 +69 -62 -65 -69", "chord sets: a chord key held plays the chord block's chord (Dm)");
+    cr_set_chord_set(&C, 3);
+    K(60, 1); R(60, 1);
+    expect("+36 +40 +45 +50 -36 -40 -45 -50", "chord sets: set 3 (Jazz), C4: D7sus2/C an octave down");
+    cr_set_bass(&C, 1);
+    K(62, 1); R(62, 1);
+    expect("+50 +53 +60 +64 +38b -50 -53 -60 -64 -38b", "chord sets: the bass plays the voicing's lowest note's pitch class");
+    cr_set_bass(&C, 0);
+    cr_set_chord_set(&C, 92);
+    K(62, 1); R(62, 1);
+    expect("+48 +51 +54 +58 -48 -51 -54 -58", "chord sets: set 92, D: Cm7b5 (its bass C under the D key)");
+    cr_set_chord_set(&C, 1);
+    cr_pad_arm(&C, 1); K(72, 1); R(72, 1);
+    ok(cr_pad_get(&C, 1, &root, &q, &x, &vel) && root == 72 && q == CR_Q_SET && x == 1, "chord sets: a pad stores the set and the key");
+    cr_set_chord_set(&C, 2); clear();
+    cr_pad_down(&C, 1); cr_pad_up(&C, 1);
+    expect("+48 +55 +62 +64 -48 -55 -62 -64", "chord sets: the pad replays its own set");
+    ok(cr_loop_event(&C, 0, 72, CR_Q_SET, 0, 100, 1), "chord sets: a loop voice of a set chord sounds");
+    expect("+48/100 +52/100 +59/100 +62/100", "chord sets: a loop plays it through the set on now (2: CM9)");
+    cr_loop_event(&C, 0, 0, 0, 0, 0, 0); clear();
+    cr_set_chord_set(&C, 0);
+    K(60, 1); R(60, 1);
+    expect("+60 -60", "chord sets: off: a key alone is a single note again");
+    cr_set_chord_set(&C, 500);
+    ok(C.chord_set == CR_NCHORDSET, "chord sets: the setter clamps");
+    cr_set_chord_set(&C, 0);
+}
+
 static void secret(const cr_mod_t *keys, int n, const char *want, const char *name)
 {
     char got[128];
@@ -2054,7 +2123,7 @@ static void run_suite(uint32_t tick_us, uint32_t base_ms, const char *tag)
     memset(SND, 0, sizeof SND); dup_on = stray_off = 0;
     cr_init(&C, &OUT);
     cr_tick(&C, now_ms());
-    s_keyboard(); s_sticky(); s_chords(); s_panic(); s_voicing(); s_bass(); s_keymode(); s_pads();
+    s_keyboard(); s_sticky(); s_chords(); s_panic(); s_voicing(); s_bass(); s_keymode(); s_pads(); s_chordsets();
     s_secret(); s_advanced(); s_free(); s_lock(); s_strum(); s_arp(); s_pattern(); s_live(); s_streams();
     s_bassmodes(); s_transpose(); s_single(); s_keyplays(); s_loopvoice(); s_queries(); s_limits(); s_torture();
     fresh("end");

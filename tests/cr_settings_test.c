@@ -851,9 +851,20 @@ static void t_session(void)
        !SD.bass_on && !SD.lock && !SD.latched && !SD.part[0].valid && !SD.part[1].valid && SD.fx.version == CSS_FX_VERSION &&
        SD.fx.n == 0 && SD.fx.sel == CSS_FXE_REVERB && SD.fx.amt[0] == CSS_FX_NONE && SD.fx.amt[CSS_NFXE - 1] == CSS_FX_NONE,
        "session defaults: nothing stored (the unit as it powered on until 0.17: bass off, voicing 0, the sounds' own sends)");
-    ok(sizeof SD.rsv + sizeof SD.rsv_fx + 2u * sizeof SD.part[0].rsv + sizeof SD.rsv_end == 143u &&
+    ok(sizeof SD.rsv + sizeof SD.rsv_fx + 2u * sizeof SD.part[0].rsv + sizeof SD.rsv_end == 142u &&
        CSS_NFXP - 8 == 16 && CSS_NP - 91 == 5,
-       "session: 143 bytes of reserve, 16 free FX parameter entries, 5 free part parameters");
+       "session: 142 bytes of reserve (the chord set took one), 16 free FX parameter entries, 5 free part parameters");
+    ok(!SD.chord_set, "session defaults: Chord Set Off");
+    {
+        static cr_session_t cx;
+        cx = SD;
+        cx.chord_set = 37;
+        cr_session_seal(&cx);
+        ok(cr_session_import(&cx, &cx, CSS_SIZE) == 1 && cx.chord_set == 37, "session: the chord set comes back");
+        cx.chord_set = 101;
+        cr_session_seal(&cx);
+        ok(cr_session_import(&cx, &cx, CSS_SIZE) == 1 && cx.chord_set == 0, "session: a chord set out of range reads Off");
+    }
     /* every item round-trips */
     css_fill(&SX);
     rc = cr_session_import(&SR, &SX, sizeof SX);

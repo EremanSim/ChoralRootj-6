@@ -467,6 +467,7 @@ enum { V_CHORD, V_KEYBOARD, V_NOTES, V_GEEK, V_SCOPE, V_N };
 
 static struct {
     uint8_t playstyle, extadd, secret, key_on, tonic, scale, single, vel;
+    uint8_t chord_set;                    /* Options > Chord Set: 0 Off, 1..100 (docs/CHORD-SETS.md; the session's) */
     int8_t transpose;
     uint8_t bass_on, bass_mode, perform_on, perf_sel, sticky;
     uint16_t bpm;
@@ -764,16 +765,18 @@ static void cu_route(void)                        /* Options > MIDI: channels an
 /* ------------------------------------------------------------- Options --- */
 enum { O_STYLE, O_EXTADD, O_SECRET, O_VEL, O_BASSMODE, O_SINGLE, O_SPLIT, O_CH_MAIN, O_CH_BASS, O_CH_RAW, O_RAW_SOUND,
        O_CLOCK, O_VIEW, O_MOTION, O_LEDS, O_HOLD, O_USB_IN, O_USB_LEVEL, O_DUALCORE, O_VERSION, O_CALIB,
-       O_RESET,                           /* Reset Settings: the last entry of a normal session */
+       O_RESET,
+       O_CHORDSET,                        /* Chord Set: the last entry of a normal session (after the others, so their
+                                           * places, the white keys that pick them, stay as they were) */
        O_SAFE, O_ERASE,
        O_N };
 #define O_N_NORMAL O_SAFE                 /* Safe Mode and Flash Data: listed in SAFE MODE only (core.h cr_safe) */
 static const char *const O_NAME[O_N] = {"Play Style", "Extension Addition", "Secret Chords", "Velocity",
     "Bass Behaviour", "Single Notes", "Split Point", "MIDI Perform", "MIDI Bass", "MIDI Raw Chord", "Raw Chord Sound",
     "MIDI Clock", "View", "Motion", "LEDs", "Hold Time", "USB Record", "USB Level", "Dual Core", "Version",
-    "Calibrate", "Reset Settings", "Safe Mode", "Flash Data"};
+    "Calibrate", "Reset Settings", "Chord Set", "Safe Mode", "Flash Data"};
 static const int16_t O_MAX[O_N] = {2, 1, 2, 127, 3, 2, 11, 16, 16, 16, 1, 2, V_N - 1, CR_MOTION_N - 1, 1, 3, 1, 1, 1,
-                                   0, 0, 0, 0, 0};
+                                   0, 0, 0, CR_NCHORDSET, 0, 0};
 static uint32_t cu_opt_n(void) { return cr_safe ? O_N : O_N_NORMAL; }
 static uint8_t cu_erase_ask;              /* Options > Flash Data: OCT+ pressed once (the second erases) */
 static uint8_t cu_reset_ask;              /* Options > Reset Settings: OCT+ pressed once (the second resets) */
@@ -811,6 +814,7 @@ static int32_t opt_get(uint32_t o)
     case O_USB_IN: return cs.usb_in;
     case O_USB_LEVEL: return cs.usb_fixed;
     case O_DUALCORE: return cs.dualcore;
+    case O_CHORDSET: return cs.chord_set;
     default: return 0;
     }
 }
@@ -835,6 +839,7 @@ static void opt_set(uint32_t o, int32_t v)
     case O_USB_IN: cs.usb_in = (uint8_t)v; cu_usb_apply(); break;
     case O_USB_LEVEL: cs.usb_fixed = (uint8_t)v; cu_usb_apply(); break;
     case O_DUALCORE: cs.dualcore = (uint8_t)v; break;   /* saved; core 1 starts (or not) at the next power-on */
+    case O_CHORDSET: cs.chord_set = (uint8_t)v; cr_post(CRE_CHORDSET, 0, 0, v); break;
     default: break;
     }
 }
@@ -871,6 +876,15 @@ static void opt_text(uint32_t o, char *d, uint32_t n)
     case O_USB_LEVEL: cu_cpy(d, v ? "Fixed" : "Master", n); break;
     case O_DUALCORE: cu_cpy(d, ONOFF[v & 1], n); cu_cat(d, (v & 1) == !cr_c1_off ? "" : " \267 restart", n); break;
     case O_VERSION: cu_cpy(d, CR_VERSION, n); break;
+    case O_CHORDSET:
+        if (!v) {
+            cu_cpy(d, "Off (chord keys)", n);
+            break;
+        }
+        cu_int(d, v, 0, n);
+        cu_cat(d, " ", n);
+        cu_cat(d, cr_chord_set_genre(v), n);
+        break;
     case O_CALIB: cu_cpy(d, "OCT+ starts", n); break;
     case O_RESET: cu_cpy(d, cu_reset_ask ? "OCT+ again: reset" : "all options to default", n); break;
     case O_SAFE: cu_cpy(d, "flash data skipped", n); break;
@@ -3788,7 +3802,8 @@ static void cu_notes(cr_screen_t *s, const cr_chord_info_t *ci)
     s->n_notes = 0;
     for (i = 0; i < ci->nnotes && i < CR_NOTES_MAX; i++) {
         char b[5];
-        uint32_t iv = (uint32_t)(ci->notes[i] + 120u - ci->root_pc) % 12u, base = ci->quality == CR_Q_NONE;
+        uint32_t iv = (uint32_t)(ci->notes[i] + 120u - ci->root_pc) % 12u,
+                 base = ci->quality == CR_Q_NONE || ci->quality == CR_Q_SET;   /* (a chord set's: its voicing, all white) */
         for (j = 0; j < 3u && !base; j++)
             base = iv == CU_TRIAD[ci->quality % CR_Q_COUNT][j];
         cr_note_name(ci->notes[i], b);
@@ -3838,6 +3853,12 @@ static void cu_header(cr_screen_t *s)
     } else if (cr_safe) {                         /* SAFE MODE: on the top line all session (Options > Safe Mode) */
         cu_cpy(s->mid, "Safe mode", sizeof s->mid);
         s->mid_col = CR_COL_RED;
+    } else if (cs.chord_set) {                    /* Options > Chord Set on: "Set 12 Jazz Min" */
+        cu_cpy(s->mid, "Set ", sizeof s->mid);
+        cu_int(s->mid + 4, cs.chord_set, 0, sizeof s->mid - 4u);
+        cu_cat(s->mid, " ", sizeof s->mid);
+        cu_cat(s->mid, cr_chord_set_genre(cs.chord_set), sizeof s->mid);
+        s->mid_col = CR_COL_ORANGE;
     }
     /* the status (top right), one of: "Bass Solo" (Bass Behaviour Solo with the bass on: the chord part is silent),
      * the perform mode ("Arp"), "Bass" (the bass on), "Oct +1", "Latch", "lock" */
@@ -4392,6 +4413,11 @@ static void cu_loopmenu(cr_screen_t *s, uint32_t now)
             cu_cpy(s->sub, sn->ci.root, sizeof s->sub);
             cu_cat(s->sub, sn->ci.qual, sizeof s->sub);
             cu_cat(s->sub, sn->ci.sup, sizeof s->sub);
+        } else if (cu_lmc.cur_ok && (cu_lmc.cur_qx >> 4) == CR_Q_SET) {   /* a chord set's (the set on now) */
+            uint8_t nt[CR_CHORD_MAX];
+            char nm[CR_CHORD_SET_NAME];
+            cr_chord_set_chord(cs.chord_set ? cs.chord_set : cr.chord_set_last, (int)cu_lmc.cur_root, cs.transpose, nt, nm);
+            cu_cpy(s->sub, nm, sizeof s->sub);
         } else if (cu_lmc.cur_ok) {
             cr_chord_name((uint8_t)(cu_lmc.cur_root % 12u), (uint8_t)(cu_lmc.cur_qx >> 4), (uint8_t)(cu_lmc.cur_qx & 15u),
                           r, q, sup);

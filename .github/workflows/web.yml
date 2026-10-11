@@ -1,0 +1,108 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# Publish the browser side to GitHub Pages without a firmware release: the chord player (web/j6) and the firmware
+# emulator (tools/emu/web, Emscripten). pages.yml (a release) publishes the full site, j6/ included; this one is for a
+# repository with no release yet, or to refresh the player between releases.
+#   push to the default branch touching web/j6, data/chordsets, firmware or tools/emu  -> build, check, deploy
+#   workflow_dispatch                                                                   -> the same
+# Settings -> Pages -> Source must be "GitHub Actions".
+name: web
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "web/j6/**"
+      - "data/chordsets/**"
+      - "tools/gen_chordsets.py"
+      - "firmware/**"
+      - "tools/emu/**"
+      - ".github/workflows/web.yml"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: "3.11"
+  PILLOW_VERSION: "11.1.0"
+  FONTTOOLS_VERSION: "4.66.1"
+  EMSDK_VERSION: "6.0.11"
+  NODE_VERSION: "22"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: The chord sets are generated from the list
+        run: python3 tools/gen_chordsets.py --check
+
+      - name: Engine tests (the chord sets among them)
+        run: |
+          set -euo pipefail
+          mkdir -p build/host
+          cc -std=c99 -Wall -Wextra -Werror -pedantic -O2 -o build/host/cr_engine_test tests/cr_engine_test.c firmware/src/cr_engine.c
+          ./build/host/cr_engine_test | tail -1
+
+      - name: Python packages (Pillow with Raqm, fontTools)
+        run: |
+          set -euo pipefail
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends libfribidi0 libraqm0
+          python3 -m pip install --disable-pip-version-check "Pillow==$PILLOW_VERSION" "fonttools==$FONTTOOLS_VERSION"
+
+      - uses: mymindstorm/setup-emsdk@4528d102f7230f0e7b276855c01ea1159be0e984 # v16
+        with:
+          version: ${{ env.EMSDK_VERSION }}
+          actions-cache-folder: emsdk-cache
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Build and test the firmware emulator
+        run: |
+          set -euo pipefail
+          python3 -c 'import sys; sys.path.insert(0, "tools"); import build; build.generate()'
+          CR_VERSION="j6-web" sh tools/emu/web/build_web.sh
+          node tools/emu/web/test_web_emu.mjs --no-native --no-page
+
+      - name: Make the site
+        run: |
+          set -euo pipefail
+          mkdir -p build/site/j6 build/site/emu
+          cp web/j6/site-index.html build/site/index.html
+          cp web/j6/index.html web/j6/chordsets.js build/site/j6/
+          cp build/emu-web/* build/site/emu/
+          find build/site -type f | sort
+
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: build/site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

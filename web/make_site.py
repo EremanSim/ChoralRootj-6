@@ -13,6 +13,7 @@
                               (fm1backup.js, fm1sounds.js, fm1manager.js and the packs of web/packs inlined; ?sim=1
                               runs it against a simulated FM-1)
   webapp/installer/packs/     web/packs/*.json (the packs as files, to download)
+  j6/                         the browser chord player: web/j6/index.html + chordsets.js (docs/CHORD-SETS.md)
   emu/                        "Try it in the browser": build/emu-web/* (made by sh tools/emu/web/build_web.sh;
                               EMU_DIR or a 4th argument overrides; missing: a warning, the site is made without it)
   src/                        not touched
@@ -147,6 +148,11 @@ def main(pkg, version, out, emu=None):
         print(f"warning: {emu}/index.html missing: the site is made without the browser emulator (emu/), so the "
               "landing page's 'Try it in the browser' link has no target; build it with sh tools/emu/web/build_web.sh",
               file=sys.stderr)
+    j6 = HERE / "j6"                               # the browser chord player (docs/CHORD-SETS.md): web/j6 as it is
+    (out / "j6").mkdir(exist_ok=True)
+    for n in ("index.html", "chordsets.js"):
+        shutil.copy(j6 / n, out / "j6" / n)
+    emu_note += "; j6/ (the chord player)"
     print(f"site: {out}: {', '.join(site)}; webapp/installer/index.html ({len(html)} B); "
           f"webapp/installer/manager.html ({len(mgr)} B, {len(pack_files)} pack files); "
           f"firmware/{name} ({len(raw)} B, {product}), firmware/LICENSE, firmware/LICENSING.md, "

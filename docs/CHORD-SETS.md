@@ -35,6 +35,9 @@ genres, chord names and notes. See [Where the sets come from](#where-the-sets-co
   Chord Set Off brings them back (turning a set on releases LOCK and its latch). The KEY layer with its keys on pick
   still takes the block (MAJ / MIN pick the scale). In the engine a chord key held would still override the set
   (cr_engine.h `cr_set_chord_set`); the UI no longer sends one while a set is on.
+- **Sounds.** With a set on, PRESETS turns through every sound of every engine as one list (FM6, FM TONE, VA,
+  CZ-1, WHEEL, PHYS: 144 factory sounds and the ones saved), the popup reading `FM TONE · 28/144` (cr_ui.c
+  `cu_sound_flat`); OPT + PRESETS still picks an engine. Off: PRESETS turns through the engine's own pool, as before.
 - **Octaves.** The roots D4 … C#5 play every chord of the set at the pitches the list gives. A root an octave above
   or below that plays the same chord an octave higher or lower. OCT- / OCT+ move it by octaves too.
 - **Transpose, voicing, bass, performance.** KNOB 1's voicing rotates the set's voicing (lowest note up an octave,

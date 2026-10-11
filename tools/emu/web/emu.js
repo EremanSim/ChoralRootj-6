@@ -321,6 +321,7 @@
       drawFb(new Uint16Array(mem.buffer, ex.web_fb(), 57600));
       drawLeds(new Uint8Array(mem.buffer, ex.web_leds(), 42));
       if (ex.web_chord_set) showSet(ex.web_chord_set());
+      previewEx = ex; fillSounds(ex); if (ex.web_sound_cur) showSound(ex.web_sound_cur());
       status("Ready. Press Start for sound.");
     } catch (err) {
       status("Could not load the emulator: " + err.message);
@@ -350,6 +351,7 @@
       if (m.fb) drawFb(m.fb);
       drawLeds(m.leds);
       if (m.set != null) showSet(m.set);
+      if (m.sound != null) showSound(m.sound);
       if (m.master !== master) { master = m.master; drawKnobs(); }
       if (m.load != null) {
         $("load").style.width = Math.min(100, m.load) + "%";
@@ -361,6 +363,7 @@
       sentK = sentB = -1;
       publish();
       if (wantSet != null) post({ type: "chordset", n: wantSet });   // (?set=N, or picked before Start)
+      if (wantSound != null) post({ type: "sound", i: wantSound });
       status(m.version + " is running. With a chord set: the right keys play its chords, the left nine control it.");
     } else if (m.type === "midi") midiOut(m.pkts);
     else if (m.type === "flash") flashSave(m.data);
@@ -436,6 +439,36 @@
     $("setup").onclick = () => step(1);
   }
   let applyPreviewSet = () => {};
+  // the chord sound: every engine's sounds in one list (web_sound_*), read from the preview instance
+  const sndSel = $("sound");
+  let soundNames = [], shownSound = -2, previewEx = null, wantSound = null;
+  const fillSounds = (ex) => {
+    if (!sndSel || !ex.web_sound_count || soundNames.length) return;
+    const n = ex.web_sound_count(), mem = new Uint8Array(ex.memory.buffer);
+    let grp = null, last = "";
+    for (let i = 0; i < n; i++) {
+      const p = ex.web_sound_name(i), s = String.fromCharCode(...mem.subarray(p, mem.indexOf(0, p))), [eng, nm] = s.split("|");
+      soundNames.push(s);
+      if (eng !== last) { grp = document.createElement("optgroup"); grp.label = eng; sndSel.appendChild(grp); last = eng; }
+      grp.appendChild(new Option(`${String(i + 1).padStart(3, "0")} ${nm}`, i));
+    }
+    $("scount").textContent = n;
+  };
+  const showSound = (i) => { if (sndSel && i !== shownSound && document.activeElement !== sndSel) { shownSound = i; if (i >= 0) sndSel.value = String(i); } };
+  const pickSound = (i) => {
+    const n = soundNames.length;
+    if (!n) return;
+    i = ((i % n) + n) % n;
+    sndSel.value = String(i);
+    wantSound = i;
+    if (node) post({ type: "sound", i });
+    else if (previewEx) { previewEx.web_sound_pick(i); previewEx.web_step(300); drawFb(new Uint16Array(previewEx.memory.buffer, previewEx.web_fb(), 57600)); }
+  };
+  if (sndSel) {
+    sndSel.onchange = () => pickSound(+sndSel.value);
+    $("sdn").onclick = () => pickSound((+sndSel.value || 0) - 1);
+    $("sup").onclick = () => pickSound((+sndSel.value || 0) + 1);
+  }
   const showSet = (n) => {
     if (n === shownSet) return;
     shownSet = n;

@@ -3207,6 +3207,56 @@ static void cu_epk_commit(void)                   /* OPT released: the engine pi
 }
 static void cu_epk_screen(cr_screen_t *s);
 
+/* PRESETS with a Chord Set on (README "Звуки"): one list of all the chord part's sounds, engine after engine in the
+ * picker's order (FM6, FM TONE, VA, CZ-1, WHEEL, PHYS), each engine's factory presets and the sounds saved there (its
+ * INIT left out), wrapping; the popup's label reads "FM TONE \267 028/144". OPT + PRESETS still picks an engine */
+static void cu_sound_flat(int32_t s)
+{
+    uint32_t ne, r, e = trk[CR_PART_CHORD].eng_req % NENGINES, pos = cs.sound, n, total = 0, at = 0, i;
+    int32_t rank = cu_engine_rank(e), d = s > 0 ? 1 : -1;
+    char lb[24], c[8];
+    cu_engine_at(0, &ne);
+    if (!ne)
+        return;
+    if (rank < 0)
+        rank = 0, e = cu_engine_at(0, 0), pos = 0;
+    for (i = 0; i < (uint32_t)(s < 0 ? -s : s); i++) {
+        n = pool_count(e);
+        if (d > 0 && pos + 1u < n)
+            pos++;
+        else if (d < 0 && pos > 1u)
+            pos--;
+        else {                                     /* the next / previous engine's first / last sound */
+            rank = (rank + d + (int32_t)ne) % (int32_t)ne;
+            e = cu_engine_at((uint32_t)rank, 0);
+            n = pool_count(e);
+            pos = d > 0 ? (n > 1u ? 1u : 0u) : n - 1u;
+        }
+    }
+    if (e != trk[CR_PART_CHORD].eng_req % NENGINES)
+        cu_pos_sync();                             /* (the place in the engine left: remembered) */
+    cu_pool_load(0, e, pos);
+    cu_sends_to_fx();
+    cu_sound_popup(0);
+    for (r = 0; r < ne; r++) {                     /* the place in the one list */
+        uint32_t x = cu_engine_at(r, 0), k = pool_count(x) > 1u ? pool_count(x) - 1u : 0u;
+        if ((int32_t)r < rank)
+            at += k;
+        total += k;
+    }
+    at += pos;
+    cu_cpy(lb, ENGINES[e]->name, sizeof lb);
+    cu_cat(lb, " \267 ", sizeof lb);
+    cu_int(c, (int32_t)at, 0, sizeof c);
+    cu_cat(lb, c, sizeof lb);
+    cu_cat(lb, "/", sizeof lb);
+    cu_int(c, (int32_t)total, 0, sizeof c);
+    cu_cat(lb, c, sizeof lb);
+    cu_cpy(cu.pop.label, lb, sizeof cu.pop.label);
+    cu_trace("sound (all): %s pos %u %s (%u/%u)\n", ENGINES[e]->name, (unsigned)pos, psnd[0].name, (unsigned)at,
+             (unsigned)total);
+}
+
 static void cu_knob(uint32_t role, int32_t s)
 {
     uint32_t l;
@@ -3341,6 +3391,11 @@ static void cu_knob(uint32_t role, int32_t s)
         }
         break;
     case EN_PRESET:                                /* the chord part's engine's pool, wrapping */
+        if (cu_set_block()) {                      /* Chord Set on: every sound of every engine in one list, as the
+                                                    * J-6's one sound knob (cu_sound_flat) */
+            cu_sound_flat(s);
+            break;
+        }
         {
             uint32_t n = pool_count(trk[CR_PART_CHORD].eng_req % NENGINES);
             cu_sound_go((cs.sound + (uint32_t)(s % (int32_t)n + (int32_t)n)) % n);

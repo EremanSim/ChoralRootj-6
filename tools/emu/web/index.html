@@ -61,8 +61,10 @@ footer { margin-top: 24px; font-size: 13px; color: var(--grey); text-align: cent
 .setbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; width: 100%; max-width: 1240px; border: 3px solid var(--orange); padding: 12px 16px; }
 .setbar label { font-size: 22px; font-weight: 900; color: var(--cream); }
 .setbar label small { font-size: 14px; color: var(--orange); margin-left: 4px; }
-.setbar select { font-size: 18px; font-weight: 800; padding: 10px 12px; max-width: none; min-width: 0; flex: 1 1 220px; }
+.setbar select { font-size: 18px; font-weight: 800; padding: 10px 12px; max-width: none; min-width: 0; flex: 1 1 180px; }
 .setbar .btn { font-size: 18px; padding: 8px 14px; }
+.setbar .slab { font-size: 22px; font-weight: 900; color: var(--cream); }
+.setbar .slab small { font-size: 14px; color: var(--green); margin-left: 4px; }
 .setbar p { flex: 1 1 100%; margin: 0; font-size: 14px; color: var(--text); }
 @media (min-width: 1500px) and (min-height: 1250px) { :root { --lcd: 720px; } }
 /* the screen enlarged above the panel only where the panel's own is small (a phone); elsewhere the panel's screen, as
@@ -83,7 +85,11 @@ footer { margin-top: 24px; font-size: 13px; color: var(--grey); text-align: cent
       <button class="btn" id="setdn" aria-label="Previous chord set">&#9664;</button>
       <select id="chordset"><option value="0">Off (ChoralRoot chord keys)</option></select>
       <button class="btn" id="setup" aria-label="Next chord set">&#9654;</button>
-      <p>With a set on, the right 18 keys play its chords and the left nine control it (SET&minus; SET+, genre, transpose, hold, phrase).</p>
+      <label for="sound" class="slab">Sound <small id="scount">144</small></label>
+      <button class="btn" id="sdn" aria-label="Previous sound">&#9664;</button>
+      <select id="sound"></select>
+      <button class="btn" id="sup" aria-label="Next sound">&#9654;</button>
+      <p>With a set on, the right 18 keys play its chords and the left nine control it (SET&minus; SET+, genre, transpose, hold, phrase), and the PRESETS knob turns through all the sounds of all six engines, as this list does.</p>
     </div>
     <div class="lcdbox" title="the FM-1's screen, 240 x 240 pixels, enlarged">
       <canvas id="lcd" width="240" height="240" aria-label="The FM-1 screen"></canvas>

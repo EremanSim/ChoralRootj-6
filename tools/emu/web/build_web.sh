@@ -39,7 +39,10 @@ mkdir -p "$OUT"
 emcc -O2 -w -std=gnu11 -I$W/compat -Ibuild/gen -Ifirmware/src -DEMU_WEB "-DFELUCCA_VERSION=\"$VER\"" \
     --no-entry -sSTANDALONE_WASM -sFILESYSTEM=0 -sSTACK_SIZE=1048576 -sINITIAL_MEMORY=33554432 \
     -o "$OUT/choralroot.wasm" $W/emu_web.c
-cp $W/index.html $W/emu.js $W/keymap.js $W/worklet.js "$OUT/"
+cp $W/emu.js $W/keymap.js $W/worklet.js "$OUT/"
+# the page loads its scripts (and they the worklet and the wasm) with ?v=<this build>: no stale cached copy after an update
+V=$(cat "$OUT/choralroot.wasm" $W/emu.js $W/keymap.js $W/worklet.js $W/index.html | cksum | cut -d' ' -f1)
+sed "s/@V@/$V/g" $W/index.html > "$OUT/index.html"
 echo "emu-web: $OUT ($VER)"
 for f in choralroot.wasm index.html emu.js keymap.js worklet.js; do
     printf '  %-16s %8d B\n' "$f" "$(wc -c < "$OUT/$f")"

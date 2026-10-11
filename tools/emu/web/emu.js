@@ -4,7 +4,7 @@
 // The device runs in worklet.js; before Start a copy boots here, without sound, to show its screen.
 "use strict";
 (() => {
-  const { KEYMAP, BTN_ROLE, ENC_ROLE, CHORD, noteName } = globalThis.FM1;
+  const { KEYMAP, BTN, BTN_ROLE, ENC, ENC_ROLE, CHORD, SETK, noteName } = globalThis.FM1;
   const $ = (id) => document.getElementById(id);
   const NS = "http://www.w3.org/2000/svg";
   const C = { cream: "#F6F2EE", red: "#E63829", orange: "#F67918", yellow: "#F6B600", blue: "#2950CD", green: "#29B27B",
@@ -44,28 +44,31 @@
   rect([484, 162, 338, 124], 8, C.bed);
   rect([77, 243, 127, 36], 6, C.bed);
   rect([247, 59, 201, 201], 10, "#000");
-  text(150, 300, "CHORDS", 9, C.grey, svg, 900);
+  const blockTitle = text(150, 300, "CHORDS", 9, C.grey, svg, 900);
   const keyEl = [], btnEl = [], encEl = [];
+  const SETK_COL = { 6: C.blue, 7: C.green, 8: C.green };
   for (let k = 0; k < 27; k++) {
     const r = KEYR[k], cx = r[0] + 21, g = el("g", { "data-c": "k" + k });
     const cap = rect(r, 21, C.cap, g, { stroke: C.edge, "stroke-width": 1.5 });
     const glow = rect([cx - 9, r[1] + 9, 18, 40], 9, C.cream, g, { opacity: 0 });
     const led = rect([cx - 4, r[1] + 14, 8, 30], 4, C.led, g);
     const lab = CHORD[k];
-    text(cx, r[1] + 58, lab || noteName(k), lab ? (lab.length > 3 ? 9 : 11) : 8.5, lab ? CHORD_COL[lab] : "#9A999A", g);
+    const lt = text(cx, r[1] + 58, lab || noteName(k), lab ? (lab.length > 3 ? 9 : 11) : 8.5, lab ? CHORD_COL[lab] : "#9A999A", g);
     const h = hint("key", k);
     if (h) text(cx, r[1] + 69, h, 8, C.hint, g, 700);
-    keyEl.push({ cap, glow, led });
+    keyEl.push({ cap, glow, led, lt });
   }
   for (let i = 0; i < 14; i++) {
     const r = BTNR[i], oct = i >= 12, g = el("g", { "data-c": "b" + i });
     const role = BTN_ROLE[i];
     const cap = rect(r, oct ? 6 : 5, C.cap, g, { stroke: C.edge, "stroke-width": 1.5 });
-    const t = text(r[0] + r[2] / 2, r[1] + (oct ? 15 : 20), role, oct ? 9 : role.length > 4 ? 8.5 : 10, BTN_COL[role] || C.cream, g);
+    // the name printed on the FM-1's button, and under it ChoralRoot's role for it (the sticker)
+    const t = text(r[0] + r[2] / 2, r[1] + (oct ? 15 : 16), oct ? role : BTN[i], oct ? 9 : 10, C.cream, g);
+    const rt = oct ? null : text(r[0] + r[2] / 2, r[1] + 25, role, role.length > 4 ? 6.5 : 7, BTN_COL[role] || C.hint, g, 800);
     const h = hint("btn", i);
-    const ht = h ? text(r[0] + r[2] / 2, oct ? r[1] + r[3] + 10 : r[1] + 31, h === "RSHIFT" ? "SHIFT" : h === "RETURN" ? "\u23ce" : h === "BKSP" ? "⌫" : h, 6.5, C.grey, g, 700) : null;
+    const ht = h ? text(r[0] + r[2] / 2, oct ? r[1] + r[3] + 10 : r[1] + 33, h === "RSHIFT" ? "SHIFT" : h === "RETURN" ? "\u23ce" : h === "BKSP" ? "⌫" : h, 5.5, C.grey, g, 700) : null;
     const dot = i === 10 ? el("circle", { cx: r[0] + 6, cy: r[1] + r[3] - 6, r: 3.2, fill: C.led }, g) : null;
-    btnEl.push({ cap, t, ht, dot, col: i === 11 ? C.red : i === 10 ? C.orange : C.cream, tcol: BTN_COL[role] || C.cream });
+    btnEl.push({ cap, t, rt, ht, dot, col: i === 11 ? C.red : i === 10 ? C.orange : C.cream, tcol: C.cream, rcol: BTN_COL[role] || C.hint });
   }
   for (let i = 0; i < 8; i++) {
     const cx = ENC_CX[i], cy = ENC_CY[i], g = el("g", { "data-c": "e" + i });
@@ -74,8 +77,8 @@
     el("circle", { cx, cy, r: 18, fill: "none", stroke: "#3E3D3E", "stroke-width": 2.5, "stroke-dasharray": "2 2.2" }, g);
     el("circle", { cx, cy, r: 12, fill: "#3A393A" }, g);
     const ptr = el("line", { x1: cx, y1: cy - 4, x2: cx, y2: cy - 11, stroke: i === 7 ? "#fff" : C.cream, "stroke-width": 2.4, "stroke-linecap": "round" }, g);
-    text(cx, cy - 28, ENC_ROLE[i], 9, ENC_COL[i], g, 900);
-    text(cx, cy + 35, hint("sel", i) || "", 8, C.hint, g, 700);
+    text(cx, cy - 28, ENC[i] === "MASTER" ? "VOLUME" : ENC[i], 9, C.cream, g, 900);   // as printed on the FM-1
+    text(cx, cy + 34, ENC_ROLE[i] === "VOLUME" ? "" : ENC_ROLE[i], 7.5, ENC_COL[i], g, 800);   // ChoralRoot's role
     encEl.push({ sel, ptr, a: 0 });
   }
 
@@ -115,6 +118,7 @@
       const e = btnEl[i], v = L[27 + i];
       e.cap.setAttribute("fill", v === 2 ? e.col : v === 3 ? mix(e.col, 0.68) : v === 1 ? mix(e.col, 0.38) : C.cap);
       e.t.setAttribute("fill", v === 2 ? "#111" : v === 1 || v === 3 ? C.cream : e.tcol);
+      if (e.rt) e.rt.setAttribute("fill", v === 2 ? "#333" : e.rcol);
       if (e.ht) e.ht.setAttribute("fill", v === 2 ? "#333" : C.hint);
     }
     btnEl[10].dot.setAttribute("fill", L[41] ? C.green : C.led);
@@ -301,10 +305,19 @@
       }
       ex.web_boot();
       ex.web_step(600);
+      applyPreviewSet = () => {
+        if (node || wantSet == null || !ex.web_chord_set_set) return;
+        ex.web_chord_set_set(wantSet); ex.web_step(400);
+        drawFb(new Uint16Array(mem.buffer, ex.web_fb(), 57600));
+        drawLeds(new Uint8Array(mem.buffer, ex.web_leds(), 42));
+        showSet(ex.web_chord_set());
+      };
+      if (wantSet != null && ex.web_chord_set_set) { ex.web_chord_set_set(wantSet); ex.web_step(400); }
       if (/demo/.test(location.search)) { ex.web_keys((1 << 5) | (1 << 9)); ex.web_step(700); }
       if (node) return;
       drawFb(new Uint16Array(mem.buffer, ex.web_fb(), 57600));
       drawLeds(new Uint8Array(mem.buffer, ex.web_leds(), 42));
+      if (ex.web_chord_set) showSet(ex.web_chord_set());
       status("Ready. Press Start for sound.");
     } catch (err) {
       status("Could not load the emulator: " + err.message);
@@ -333,6 +346,7 @@
     if (m.type === "frame") {
       if (m.fb) drawFb(m.fb);
       drawLeds(m.leds);
+      if (m.set != null) showSet(m.set);
       if (m.master !== master) { master = m.master; drawKnobs(); }
       if (m.load != null) {
         $("load").style.width = Math.min(100, m.load) + "%";
@@ -343,7 +357,8 @@
       $("gate").hidden = true;
       sentK = sentB = -1;
       publish();
-      status(m.version + " is running. Hold a chord key and press a root.");
+      if (wantSet != null) post({ type: "chordset", n: wantSet });   // (?set=N, or picked before Start)
+      status(m.version + " is running. With a chord set: the right keys play its chords, the left nine control it.");
     } else if (m.type === "midi") midiOut(m.pkts);
     else if (m.type === "flash") flashSave(m.data);
     else if (m.type === "error") status("The emulator failed: " + m.message);
@@ -393,6 +408,39 @@
     if (inPort) inPort.onmidimessage = null;
     inPort = e.target.value ? access.inputs.get(e.target.value) : null;
     if (inPort) inPort.onmidimessage = midiIn;
+  };
+
+  // -------------------------------------------------------------------------------- the chord sets ---
+  // Options > Chord Set from the page (the select under the panel; ?set=N on the address), and the chord block's
+  // labels: the SET block's while a set is on (docs/CHORD-SETS.md)
+  let shownSet = -1, wantSet = (() => { const m = /[?&]set=(\d+)/.exec(location.search); return m ? Math.min(100, +m[1]) : null; })();
+  const GENRES = ["Pop", "Pop", "Jazz", "Jazz", "Jazz", "Blues", "Trad Maj", "Trad Min", "Trad Min 2", "Pop Min", "Pop Min",
+    "Jazz Min", "Jazz Min", "Oct Stack", "4th Stack", "5th Stack", "Utility", "Utility", "Utility", "Utility", "Utility",
+    "Utility", "Utility", "Utility", "Utility", "Utility", "Pop/Synth", "Pop", "Pop", "Pop", "Pop", "Pop", "Cinematic",
+    "Cinematic/Synthwave", "Cinematic/House", "Cinematic", "Cinematic", "New Age/Cinematic", "Synthwave", "Synthwave",
+    "Synthwave", "Synthwave", "Synthwave", "Synthwave", "Synthwave", "Synthwave", "Synthwave/House", "Trance", "House",
+    "House", "House", "House", "House", "House", "Jazz House", "Jazz House", "House/Techno", "Techno", "EDM", "EDM", "EDM",
+    "EDM", "EDM", "EDM", "Gospel/R&B", "Gospel/R&B", "Gospel/R&B", "Lofi R&B", "Lofi R&B", "Funk", "Funk", "Neo Soul",
+    "Neo Soul", "Neo Soul", "Neo Soul", "Neo-Soul", "Neo-Soul", "Neo-Soul", "Neo-Soul", "Neo-Soul", "Neo-Soul",
+    "Jazz/Bossa", "Bossa Nova", "Bossa Nova", "Jazz", "Jazz", "Jazz", "Jazz", "Jazz", "Jazz", "Jazz", "Jazz", "Jazz",
+    "Jazz", "Classical", "Classical", "Classical", "Classical", "Modern", "Modern"];
+  const setSel = $("chordset");
+  if (setSel) {
+    GENRES.forEach((g, i) => setSel.add(new Option(`${String(i + 1).padStart(3, "0")} ${g}`, i + 1)));
+    setSel.onchange = () => { wantSet = +setSel.value; if (node) post({ type: "chordset", n: wantSet }); else applyPreviewSet(); };
+  }
+  let applyPreviewSet = () => {};
+  const showSet = (n) => {
+    if (n === shownSet) return;
+    shownSet = n;
+    if (setSel && document.activeElement !== setSel) setSel.value = String(n);
+    blockTitle.textContent = n ? "CHORD SET " + n : "CHORDS";
+    for (let k = 0; k < 9; k++) {
+      const lab = n ? SETK[k] : CHORD[k];
+      keyEl[k].lt.textContent = lab;
+      keyEl[k].lt.setAttribute("font-size", lab.length > 3 ? 8.5 : 11);
+      keyEl[k].lt.setAttribute("fill", n ? (SETK_COL[k] || C.orange) : CHORD_COL[lab]);
+    }
   };
 
   drawKnobs();

@@ -150,7 +150,7 @@ def main(pkg, version, out, emu=None):
               file=sys.stderr)
     j6 = HERE / "j6"                               # the browser chord player (docs/CHORD-SETS.md): web/j6 as it is
     (out / "j6").mkdir(exist_ok=True)
-    for n in ("index.html", "chordsets.js"):
+    for n in ("index.html", "player.html", "chordsets.js"):
         shutil.copy(j6 / n, out / "j6" / n)
     emu_note += "; j6/ (the chord player)"
     print(f"site: {out}: {', '.join(site)}; webapp/installer/index.html ({len(html)} B); "

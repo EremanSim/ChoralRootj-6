@@ -30,7 +30,7 @@ if [ -n "${CR_VERSION:-}" ]; then
         *) VER="ChoralRoot $(printf %s "$CR_VERSION" | tr A-Z a-z)" ;;
     esac
 else
-    VER=$(sed -n 's/^#define FELUCCA_VERSION "\(.*\)"/\1/p' firmware/src/choralroot.c | head -1)
+    VER=$(sed -n 's/^#define FELUCCA_VERSION "\([^"]*\)".*/\1/p' firmware/src/choralroot.c | head -1)
 fi
 OUT=build/emu-web
 W=tools/emu/web

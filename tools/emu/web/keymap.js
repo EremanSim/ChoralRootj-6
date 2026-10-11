@@ -29,6 +29,8 @@ globalThis.FM1 = {
   ENC_ROLE: ["BPM", "BASS SND", "SOUND", "VOICING", "BASS VOICE", "PERFORM", "FX", "VOLUME"],
   // the chord block's sticker: firmware key -> label
   CHORD: { 0: "6", 1: "DIM", 2: "m7", 3: "MIN", 4: "M7", 5: "MAJ", 6: "LOCK", 7: "9", 8: "SUS" },
+  // .. with a Chord Set on: the SET block (docs/CHORD-SETS.md)
+  SETK: { 0: "SET−", 1: "GNR−", 2: "SET+", 3: "GNR+", 4: "TR−", 5: "TR+", 6: "HOLD", 7: "PHRS", 8: "NEXT" },
   noteName(k) {
     const N = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"], m = 53 + k;
     return N[m % 12] + (Math.floor(m / 12) - 1);

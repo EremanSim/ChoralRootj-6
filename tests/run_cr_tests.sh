@@ -14,6 +14,8 @@ cc -std=c99 -Wall -Wextra -Werror -pedantic -O2 -o build/host/cr_bootguard_test 
 cc -std=c99 -Wall -Wextra -Wno-unused-function -Werror -pedantic -O1 -fsanitize=address,undefined -fno-sanitize-recover=all -o build/host/cr_stub_test tests/cr_stub_test.c
 ./build/host/cr_stub_test
 python3 tests/stub_pkg_test.py
+# the chord sets (docs/CHORD-SETS.md): the generated tables match data/chordsets
+python3 tools/gen_chordsets.py --check
 cc -std=c99 -Wall -Wextra -Werror -pedantic -O2 -o build/host/cr_engine_test tests/cr_engine_test.c firmware/src/cr_engine.c
 ./build/host/cr_engine_test
 cc -std=c99 -Wall -Wextra -Werror -pedantic -O2 -o build/host/cr_loop_test tests/cr_loop_test.c firmware/src/cr_loop.c firmware/src/cr_engine.c

@@ -213,6 +213,18 @@ ok(true, `speed: ${secs.toFixed(2)} s of device time in ${took.toFixed(2)} s (${
   ok(bpm1 && bpm1 === bpm2, `flash round trip: BPM ${bpm1} after a reboot from the saved image (${bpm2})`);
 }
 
+// the chord sets (docs/CHORD-SETS.md): Options > Chord Set 3, D4 alone plays the set's D chord (Dm9), Off again: a note
+{
+  const log2 = [];
+  const run2 = runScript(ex, parseScript(fs.readFileSync(path.join(ROOT, "tools/emu/scripts/cr_chordset.txt"), "utf8")), log2);
+  const d = log2.filter((l) => l[0] === "dump").map((l) => l[2]);
+  ok(d.length === 4 && /chord Dm9 sounding 1 notes 50 53 60 64/.test(d[0]),
+     `chord set 3, D4: Dm9, notes 50 53 60 64 (${(d[0] || "").match(/chord [^\n]*?notes[ 0-9]*/)})`);
+  ok(fbDiff(run2.shots.cr_chordset_opt, run2.shots.cr_chordset) > 500, "chord set: the chord screen after Options");
+  ok(/parts busy 0/.test(d[1] || ""), "chord set: silent 2 s after the release");
+  ok(/chord D sounding 1 notes 62\b/.test(d[2] || "") && !/notes 62 /.test(d[2] || ""), "chord set Off: D4 alone is one note again");
+}
+
 // the worklet's view: 128-frame quanta while a chord plays (a UI frame lands in some of them)
 {
   ex.web_keys((1 << 5) | (1 << 4) | (1 << 9));   // MAJ + M7 + D4

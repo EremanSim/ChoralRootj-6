@@ -1,4 +1,47 @@
-# ChoralRoot FM-1
+# ChoralRoot J-6
+
+**A chord instrument with the 100 chord sets of the Roland AIRA J-6, on an engine of its own.** This is a fork of
+[ChoralRoot FM-1](https://github.com/Quixotic7/ChoralRootFM1), a chord firmware for the M-VAVE FM-1. It adds:
+
+- **100 chord sets** ([docs/CHORD-SETS.md](docs/CHORD-SETS.md)). Each set gives the 12 keys their own chords, voiced
+  with extensions, slash basses and voice-leading, in genres from Pop, Jazz and Neo Soul to House, Synthwave, EDM,
+  Gospel and Classical. The original firmware builds every chord from the same formulas (M7, maj7, m7 …), which
+  makes every chord sound alike. A set plays chords that were voiced for a style. On the FM-1:
+  **Options > Chord Set** 1 … 100. The chord keys still work on top of a set.
+- **A browser chord player** ([web/j6/](web/j6/index.html)): the 100 sets on an original Web Audio synth with
+  8 sounds, strums, arpeggios and rhythm styles, a 16-step chord sequencer, Web MIDI, computer-keyboard play.
+  No FM-1 needed.
+- **The whole firmware in the browser** (`tools/emu/web`, WebAssembly), Chord Set included.
+
+The `web` workflow publishes both to GitHub Pages (`/j6/` and `/emu/`) on every push to `main`. Set
+Settings → Pages → Source to "GitHub Actions" once.
+
+### About the J-6 chord sets (copyright and trademarks)
+
+The sets follow the chord names and voicings in the "Chord Set List" of the Roland J-6 owner's manual. They were
+used as a reference and as inspiration. Chords, voicings and progressions are common musical material that every
+musician uses. The list here contains only which notes form each chord and the chord's name. **No Roland code,
+firmware, samples, sounds, presets or artwork are included.** The chord engine, the synth engines, the sequencer,
+the browser player and all the code are this project's own, under GPL-3.0. ChoralRoot J-6 is not affiliated with,
+endorsed by or sponsored by Roland Corporation. "Roland", "AIRA" and "J-6" are trademarks of Roland Corporation and
+are used only to name the instrument whose chord list the sets follow. The data is kept in one file
+(`data/chordsets/`), so it can be removed without touching the engine.
+
+### По-русски
+
+ChoralRoot J-6 — форк прошивки ChoralRoot FM-1 с **100 наборами аккордов как у Roland AIRA J-6**. В каждом наборе
+12 клавиш играют готовые, по-разному «раскрашенные» аккорды (Pop, Jazz, Neo Soul, House, Synthwave, EDM, Gospel,
+Classical и др.), а не однотипные M7 / maj7 / m7. На FM-1: **Options > Chord Set**. В браузере: плеер `web/j6/`
+(синтезатор, арпеджио, ритмы, 16-шаговый секвенсор, MIDI) и эмулятор всей прошивки. Наборы аккордов взяты из
+опубликованной таблицы J-6 как ориентир и вдохновение: аккорды и последовательности — общее музыкальное наследие.
+Движок, звук и код — свои (GPL-3.0). Проект не связан с Roland и не одобрен ею. Roland, AIRA и J-6 — товарные знаки
+Roland Corporation.
+
+---
+
+The rest of this README is the upstream firmware's, unchanged.
+
+## ChoralRoot FM-1 (upstream)
 
 A Telepathic Orchid-style chord instrument as a firmware for the **M-VAVE FM-1**: one hand plays
 roots, the other shapes chords; voicing, Key Mode, performance modes, bass, a looper — with the

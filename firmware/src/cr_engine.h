@@ -51,6 +51,10 @@ typedef enum { CR_MOD_DIM, CR_MOD_MIN, CR_MOD_MAJ, CR_MOD_SUS, CR_MOD_6, CR_MOD_
 enum { CR_Q_NONE = 0, CR_Q_DIM, CR_Q_MIN, CR_Q_MAJ, CR_Q_SUS, CR_Q_AUG, CR_Q_POW, CR_Q_MIN4, CR_Q_COUNT };
 /* extension mask bits (the Lua ext_mask() packing) */
 enum { CR_EXT_6 = 1, CR_EXT_M7 = 2, CR_EXT_MAJ7 = 4, CR_EXT_9 = 8 };
+/* a chord of a chord set (cr_set_chord_set, docs/CHORD-SETS.md): not a quality of the tables above. A pad, the looper's
+ * gesture and cr_loop_event carry it as q with root = the key's note (untransposed); a pad's ext = the set 1..100 */
+#define CR_Q_SET CR_Q_COUNT
+#define CR_NCHORDSET 100         /* chord sets 1..100 (0 = off: the chord block's chords) */
 
 /* ---------------------------------------------------------- settings --- */
 typedef enum { CR_PS_SIMPLE, CR_PS_ADVANCED, CR_PS_FREE } cr_playstyle_t;
@@ -105,6 +109,8 @@ typedef struct {
     uint8_t vel, pc, pc_pressed, note_pressed;
     int8_t transpose;            /* captured at note-on */
     uint8_t sq, sx;              /* spec: quality (CR_Q_*) + extension mask, mutated by Advanced/Free */
+    uint8_t cs;                  /* the chord set at note-on (1..100, 0 none): with no chord key in the spec the key plays
+                                  * that set's chord (rq = CR_Q_SET) */
     uint8_t rq;                  /* resolved quality (Key Mode / secret) */
     int16_t root;                /* resolved root note, untransposed */
     uint8_t nbase, base[CR_CHORD_MAX], nnotes, notes[CR_CHORD_MAX];
@@ -145,6 +151,7 @@ typedef struct {
     uint8_t full, split_note;        /* the Full keyboard (every key a single note, the chord block ignored); its
                                       * split KEY as a MIDI note (Split Oct / Split Bass there) */
     uint8_t bass_on, bass_mode;
+    uint8_t chord_set, chord_set_last;   /* the chord set 1..CR_NCHORDSET (0 off); the last one on (a loop's set chords) */
     int8_t bass_voicing, voicing;
     uint8_t perform_on, perform_mode, sticky;
     uint16_t bpm;
@@ -172,6 +179,8 @@ typedef struct {
     cr_chord_t last_chord;           /* the last played chord (pad recording) */
     uint8_t disp_vi;                 /* voice shown on screen (0xFF = none) */
     uint8_t disp_valid, disp_q, disp_x, disp_pc, disp_n, disp_notes[CR_CHORD_MAX];
+    uint8_t disp_cs, disp_key;       /* the shown chord, a chord set's: its set and key note */
+    int8_t disp_tr;
 } cr_t;
 
 /* -------------------------------------------------------------- core --- */
@@ -224,6 +233,16 @@ void cr_set_key_plays(cr_t *c, int notes);
  * played by hand). New gestures only. */
 void cr_set_keyboard(cr_t *c, int full, int split_note);
 void cr_set_bass(cr_t *c, int enabled);
+/* Chord sets (docs/CHORD-SETS.md): set 1..CR_NCHORDSET, 0 off. On, a root key with no chord key held plays the set's
+ * chord for its pitch class (a voicing of up to 4 notes, the set's own), moved by octaves with the key: the keys D4..C#5
+ * play the set as listed, an octave up or down from there plays it an octave up or down. A chord key held (or latched)
+ * plays the chord block's chord as ever. Voicing (KNOB 1), transpose, bass and performance apply. New gestures only */
+void cr_set_chord_set(cr_t *c, int set);
+const char *cr_chord_set_genre(int set);           /* "Pop", "Jazz", ... ("" out of range) */
+/* the chord of set (1..CR_NCHORDSET) for a key (MIDI note), low to high, transposed by tr; returns the count (0: none).
+ * name (may be 0): the chord's name, transposed, up to CR_CHORD_SET_NAME - 1 chars */
+#define CR_CHORD_SET_NAME 16
+int  cr_chord_set_chord(int set, int key, int tr, uint8_t out[CR_CHORD_MAX], char name[CR_CHORD_SET_NAME]);
 void cr_set_bass_mode(cr_t *c, cr_bassmode_t m);
 void cr_set_perform(cr_t *c, int enabled);         /* restarts sounding voices, flushes a Hold latch */
 void cr_set_perform_mode(cr_t *c, cr_pmode_t m);
@@ -264,6 +283,7 @@ typedef struct {
     uint8_t quality;             /* CR_Q_*; CR_Q_NONE = a single note */
     uint8_t ext;                 /* CR_EXT_* */
     uint8_t secret;              /* quality is a Secret Chord type */
+    uint8_t set;                 /* quality CR_Q_SET: the chord set 1..100 (the name: the set's) */
     uint8_t nnotes, notes[CR_CHORD_MAX];   /* voiced notes, low to high */
     char root[3], qual[5], sup[CR_SUP_MAX]; /* Orchid Standard Chord Naming: "C" "m" "7 9"; "C" "5"; "C" "m" "add4" */
 } cr_chord_info_t;

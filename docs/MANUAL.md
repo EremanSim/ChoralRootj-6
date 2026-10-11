@@ -1037,10 +1037,11 @@ Tap **OPT** (printed GLO). One setting fills the screen:
 | **Version** | | | the firmware's version |
 | **Calibrate** | | | OCT+ starts the panel calibration ([Calibration](#calibration)) |
 | **Reset Settings** | | | OCT+ twice puts every setting back to its default (below) |
+| **Chord Set** | Off, 1 to 100 | Off | 1 to 100: a root key alone plays that chord set's chord, as on a Roland J-6; a chord key held still plays the chord block's chord ([docs/CHORD-SETS.md](CHORD-SETS.md)). Kept over a power-off; Reset Settings turns it Off |
 
 In SAFE MODE two more entries appear at the end, Safe Mode and Flash Data ([SAFE MODE](#safe-mode)).
 
-**Reset Settings** is the last entry: turn SELECT to the end of the list. It puts the FM-1 back to the settings a
+**Reset Settings** is the last entry but one, before Chord Set: turn SELECT to the end of the list and back one. It puts the FM-1 back to the settings a
 new one has, in one step, which is the quick way out when an option you do not remember setting makes it behave
 strangely, and the way to make sure two people are looking at the same instrument. Press **OCT+**: the entry reads
 `OCT+ again: reset`. Press **OCT+** again and it is done: `settings reset` shows, and you are back on the view.

@@ -234,3 +234,70 @@ WEB_EXPORT void web_dump(void) { emu_fw_dump(); }                    /* to stdou
 /* Options > Chord Set (docs/CHORD-SETS.md): read (0 off, 1..100) and set, as KNOB 1 on that entry does */
 WEB_EXPORT uint32_t web_chord_set(void) { return booted ? cs.chord_set : 0u; }
 WEB_EXPORT void web_chord_set_set(uint32_t n) { if (booted) opt_set(O_CHORDSET, (int32_t)(n > CR_NCHORDSET ? 0u : n)); }
+/* the chord sound as one list over every engine (as PRESETS turns with a Chord Set on: cr_ui.c cu_sound_flat):
+ * index i -> (engine, pool position >= 1); the page's Sound select */
+static int web_sound_at(uint32_t i, uint32_t *e, uint32_t *pos)
+{
+    uint32_t ne, r;
+    cu_engine_at(0, &ne);
+    for (r = 0; r < ne; r++) {
+        uint32_t x = cu_engine_at(r, 0), n = pool_count(x);
+        if (n > 1u && i < n - 1u) {
+            *e = x;
+            *pos = i + 1u;
+            return 1;
+        }
+        i -= n > 1u ? n - 1u : 0u;
+    }
+    return 0;
+}
+WEB_EXPORT uint32_t web_sound_count(void)
+{
+    uint32_t ne, r, t = 0;
+    if (!booted)
+        return 0;
+    cu_engine_at(0, &ne);
+    for (r = 0; r < ne; r++)
+        t += pool_count(cu_engine_at(r, 0)) > 1u ? pool_count(cu_engine_at(r, 0)) - 1u : 0u;
+    return t;
+}
+static char web_sname[40];
+WEB_EXPORT const char *web_sound_name(uint32_t i)    /* "FM6|TINE EP" */
+{
+    uint32_t e, pos;
+    char nm[16];
+    web_sname[0] = 0;
+    if (booted && web_sound_at(i, &e, &pos)) {
+        pool_name(e, pos, nm);
+        cu_cpy(web_sname, ENGINES[e]->name, sizeof web_sname);
+        cu_cat(web_sname, "|", sizeof web_sname);
+        cu_cat(web_sname, nm, sizeof web_sname);
+    }
+    return web_sname;
+}
+WEB_EXPORT int32_t web_sound_cur(void)               /* the chord part's sound's index, -1: INIT or none */
+{
+    uint32_t ne, r, at = 0, e;
+    if (!booted)
+        return -1;
+    e = trk[CR_PART_CHORD].eng_req % NENGINES;
+    cu_engine_at(0, &ne);
+    for (r = 0; r < ne; r++) {
+        uint32_t x = cu_engine_at(r, 0), n = pool_count(x);
+        if (x == e)
+            return cs.sound >= 1u ? (int32_t)(at + cs.sound - 1u) : -1;
+        at += n > 1u ? n - 1u : 0u;
+    }
+    return -1;
+}
+WEB_EXPORT void web_sound_pick(uint32_t i)
+{
+    uint32_t e, pos;
+    if (!booted || !web_sound_at(i, &e, &pos))
+        return;
+    if (e != trk[CR_PART_CHORD].eng_req % NENGINES)
+        cu_pos_sync();
+    cu_pool_load(0, e, pos);
+    cu_sends_to_fx();
+    cu_sound_popup(0);
+}

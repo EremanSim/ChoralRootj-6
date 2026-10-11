@@ -65,13 +65,14 @@ class FM1 extends AudioWorkletProcessor {
       case "enc": ex.web_enc(m.role | 0, m.n | 0); break;
       case "master": ex.web_master(m.value | 0); break;
       case "chordset": ex.web_chord_set_set(m.n >>> 0); break;
+      case "sound": ex.web_sound_pick(m.i >>> 0); break;
       case "midi": for (const p of m.pkts) this.midiIn.push(p >>> 0); break;
     }
   }
 
   publish() {
     const ex = this.ex;
-    const msg = { type: "frame", leds: new Uint8Array(this.mem.buffer, ex.web_leds(), 42).slice(), master: ex.web_master_get(), set: ex.web_chord_set() };
+    const msg = { type: "frame", leds: new Uint8Array(this.mem.buffer, ex.web_leds(), 42).slice(), master: ex.web_master_get(), set: ex.web_chord_set(), sound: ex.web_sound_cur() };
     const transfer = [];
     if (this.frames >= 22050) {                      // the share of real time spent running the device
       msg.load = Math.round((100 * this.busy) / ((this.frames / sampleRate) * 1000));

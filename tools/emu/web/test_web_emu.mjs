@@ -218,12 +218,13 @@ ok(true, `speed: ${secs.toFixed(2)} s of device time in ${took.toFixed(2)} s (${
   const log2 = [];
   const run2 = runScript(ex, parseScript(fs.readFileSync(path.join(ROOT, "tools/emu/scripts/cr_chordset.txt"), "utf8")), log2);
   const d = log2.filter((l) => l[0] === "dump").map((l) => l[2]);
-  ok(d.length === 5 && /chord Dm9 sounding 1 notes 50 53 60 64/.test(d[0]),
+  ok(d.length === 6 && /chord Dm9 sounding 1 notes 50 53 60 64/.test(d[0]),
      `chord set 3, D4: Dm9, notes 50 53 60 64 (${(d[0] || "").match(/chord [^\n]*?notes[ 0-9]*/)})`);
   ok(fbDiff(run2.shots.cr_chordset_opt, run2.shots.cr_chordset) > 500, "chord set: the chord screen after Options");
   ok(/parts busy 0/.test(d[1] || ""), "chord set: silent 2 s after the release");
-  ok(/chord D9 sounding 1 notes 50 54 60 64/.test(d[2] || ""), "SET block: G#3 (genre +) -> set 6 Blues, D4: D9");
-  ok(/chord D sounding 1 notes 62\b/.test(d[3] || "") && !/notes 62 /.test(d[3] || ""), "chord set Off: D4 alone is one note again");
+  ok(/part 0: FM TONE/.test(d[2] || ""), `PRESETS +30 with a set on: all the sounds in one list, into FM TONE (${(d[2] || "").match(/part 0: [^\n,]*/)})`);
+  ok(/chord D9 sounding 1 notes 50 54 60 64/.test(d[3] || ""), "SET block: G#3 (genre +) -> set 6 Blues, D4: D9");
+  ok(/chord D sounding 1 notes 62\b/.test(d[4] || "") && !/notes 62 /.test(d[4] || ""), "chord set Off: D4 alone is one note again");
 }
 
 // the worklet's view: 128-frame quanta while a chord plays (a UI frame lands in some of them)

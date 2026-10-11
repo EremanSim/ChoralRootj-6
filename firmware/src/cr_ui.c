@@ -794,6 +794,7 @@ static void cu_usb_apply(void)
 #endif
 }
 
+static void cu_set_unlock(void);
 static int32_t opt_get(uint32_t o)
 {
     switch (o) {
@@ -839,7 +840,12 @@ static void opt_set(uint32_t o, int32_t v)
     case O_USB_IN: cs.usb_in = (uint8_t)v; cu_usb_apply(); break;
     case O_USB_LEVEL: cs.usb_fixed = (uint8_t)v; cu_usb_apply(); break;
     case O_DUALCORE: cs.dualcore = (uint8_t)v; break;   /* saved; core 1 starts (or not) at the next power-on */
-    case O_CHORDSET: cs.chord_set = (uint8_t)v; cr_post(CRE_CHORDSET, 0, 0, v); break;
+    case O_CHORDSET:
+        if (v && !cs.chord_set)
+            cu_set_unlock();                       /* (LOCK off with its latch: the chord block becomes the SET block) */
+        cs.chord_set = (uint8_t)v;
+        cr_post(CRE_CHORDSET, 0, 0, v);
+        break;
     default: break;
     }
 }
@@ -934,6 +940,8 @@ static struct {
                                            * it goes off (another chord key pressed meanwhile: it stays) */
     uint8_t kpage;                        /* the KEY layer's page (SELECT): 0 Tonic Scale Transpose Single, 1 Key plays
                                            * Keyboard; the first page whenever the layer opens */
+    uint16_t setk;                        /* the chord block's keys pressed as the SET block's (Chord Set on: cu_set_key),
+                                           * so their release is not a chord key's */
     uint8_t mlatch, mkill;                /* bit cr_mod_t: latched by LOCK; toggled off by this press (its release
                                            * does nothing) */
     uint8_t key_note[CU_NKEY];            /* root keys (the Full keyboard: every key): note + 1 sent; 0xFF: the
@@ -2494,6 +2502,80 @@ static int32_t cu_layer_count(uint32_t l)
 #define CU_KEY_LOCK 6u                             /* B3 */
 #define CU_KEY_MIN 3u                              /* G#3 (CU_MOD_OF_KEY) */
 #define CU_KEY_MAJ 5u                              /* A#3 */
+
+/* The SET block (docs/CHORD-SETS.md, "The keys"): with a Chord Set on, the nine keys of the chord block (F3 .. C#4) are
+ * the set's controls, as a J-6's panel is, and the 18 roots play the set's chords (D4 .. C#5 the set as listed, D5 ..
+ * G5 an octave up). No chord key, no LOCK while a set is on (Options > Chord Set Off brings them back):
+ *   F3  SET -        F#3 GENRE -      G3  SET +        G#3 GENRE +
+ *   A3  TRANSPOSE -  A#3 TRANSPOSE +  B3  HOLD (LATCH)  C4  PHRASE on / off  C#4 next PHRASE (the PERF modes)
+ * The KEY layer with its keys on pick keeps the block (MAJ / MIN pick the scale), as without a set */
+enum { SK_SET_DN, SK_GENRE_DN, SK_SET_UP, SK_GENRE_UP, SK_TR_DN, SK_TR_UP, SK_HOLD, SK_PHRASE, SK_PHRASE_NEXT };
+static int cu_set_block(void) { return cs.chord_set && !cs.kbd_full; }
+static void cu_lock_tap(void);
+static void cu_set_unlock(void) { if (cu.clock) cu_lock_tap(); }
+static int cu_same(const char *a, const char *b)  /* two strings equal */
+{
+    while (*a && *a == *b)
+        a++, b++;
+    return *a == *b;
+}
+static void cu_set_pick(uint32_t set)              /* 1..100: the set, its popup */
+{
+    char b[8];
+    cs.chord_set = (uint8_t)set;
+    cr_post(CRE_CHORDSET, 0, 0, (int32_t)set);
+    cu_int(b, (int32_t)set, 0, sizeof b);
+    cu_popup(b, cr_chord_set_genre((int)set), "chord set", CR_COL_ORANGE, (int32_t)set, 1, CR_NCHORDSET, 25);
+}
+static void cu_set_key(uint32_t k)                 /* a key of the SET block pressed */
+{
+    uint32_t s = cs.chord_set, i;
+    switch (k) {
+    case SK_SET_DN: cu_set_pick(s > 1u ? s - 1u : (uint32_t)CR_NCHORDSET); break;
+    case SK_SET_UP: cu_set_pick(s < (uint32_t)CR_NCHORDSET ? s + 1u : 1u); break;
+    case SK_GENRE_DN: case SK_GENRE_UP: {          /* the first set of the previous / next genre (wrapping) */
+        const char *g = cr_chord_set_genre((int)s);
+        int d = k == SK_GENRE_UP ? 1 : -1;
+        for (i = 0; i < (uint32_t)CR_NCHORDSET; i++) {
+            s = (s + (uint32_t)CR_NCHORDSET + (uint32_t)d - 1u) % (uint32_t)CR_NCHORDSET + 1u;
+            if (!cu_same(cr_chord_set_genre((int)s), g))
+                break;
+        }
+        if (d < 0)                                 /* back to that genre's first set */
+            while (s > 1u && cu_same(cr_chord_set_genre((int)s - 1), cr_chord_set_genre((int)s)))
+                s--;
+        cu_set_pick(s);
+        break;
+    }
+    case SK_TR_DN: case SK_TR_UP:
+        cs.transpose = (int8_t)(cs.transpose + (k == SK_TR_UP ? 1 : -1));
+        cs.transpose = (int8_t)(cs.transpose < -12 ? -12 : cs.transpose > 12 ? 12 : cs.transpose);
+        cr_post(CRE_TRANSPOSE, 0, 0, cs.transpose);
+        cu_popup_num(cs.transpose, 1, "", "transpose", CR_COL_YELLOW, -12, 12, 25);
+        break;
+    case SK_HOLD:
+        cs.sticky ^= 1u;
+        cr_post(CRE_STICKY, 0, 0, cs.sticky);
+        cu_message(cs.sticky ? "hold on" : "hold off", CR_COL_ORANGE);
+        break;
+    case SK_PHRASE:
+        cs.perform_on ^= 1u;
+        cr_post(CRE_PERFORM, 0, 0, cs.perform_on);
+        cu_message(cs.perform_on ? CU_PERF[cs.perf_sel % 7u].name : "phrase off", CR_COL_ORANGE);
+        break;
+    case SK_PHRASE_NEXT:
+        cu_perf_pick(cs.perf_sel + 1u);
+        if (!cs.perform_on) {
+            cs.perform_on = 1;
+            cr_post(CRE_PERFORM, 0, 0, 1);
+        }
+        cu_message(CU_PERF[cs.perf_sel % 7u].name, CR_COL_ORANGE);
+        break;
+    default: break;
+    }
+    cu_trace("set block: key %u -> set %u, transpose %d, hold %u, phrase %u (%s)\n", (unsigned)k, (unsigned)cs.chord_set,
+             (int)cs.transpose, (unsigned)cs.sticky, (unsigned)cs.perform_on, CU_PERF[cs.perf_sel % 7u].name);
+}
 static int cu_key_pick(void) { return cu_layer() == L_KEY && !cs.key_play; }   /* (keys: play: the chord block's own job) */
 static void cu_key_scale(uint32_t k)               /* a chord key pressed in the KEY layer */
 {
@@ -2906,6 +2988,11 @@ static void cu_key_press(uint32_t k)
         cu.b3_pend = 0;
         cu_lock_tap();
     }
+    if (k < CU_ROOT0 && cu_set_block() && !cu_key_pick()) {   /* Chord Set on: the SET block (above) */
+        cu.setk |= (uint16_t)(1u << k);
+        cu_set_key(k);
+        return;
+    }
     if (k == CU_KEY_LOCK && !cs.kbd_full) {        /* B3: a tap (its release) toggles LOCK, a hold is its layer */
         cu.b3_pend = 1;
         cu.b3_t0 = cu_now();
@@ -2959,6 +3046,10 @@ static void cu_key_press(uint32_t k)
 static void cu_key_release(uint32_t k)
 {
     cu.kheld &= ~(1u << k);
+    if (k < CU_ROOT0 && ((cu.setk >> k) & 1u)) {   /* a SET block key: its job was the press */
+        cu.setk &= (uint16_t)~(1u << k);
+        return;
+    }
     if (k == CU_KEY_LOCK && !cu.key_note[k] && !((cu.kpick >> k) & 1u)) {
         if (cu.b3_pend) {                          /* let go before the hold time, nothing else pressed: the tap */
             cu.b3_pend = 0;
@@ -3651,6 +3742,15 @@ static void cr_leds(void)
      * layer's selected key through `own`): the selected scale's key lit, the other dark. With the layer's keys set
      * to play (cu_key_pick 0) they are the chord keys' own state again */
     for (k = 0; k < CU_ROOT0 && !full; k++) {      /* (the Full keyboard: they are notes, lit with the roots below) */
+        if (cu_set_block() && !cu_key_pick()) {    /* the SET block: every key faint; lit = on (HOLD, PHRASE, the
+                                                    * transpose's direction), or held */
+            int on = (int)((cu.setk >> k) & 1u) || (k == SK_HOLD && cs.sticky) ||
+                     ((k == SK_PHRASE || k == SK_PHRASE_NEXT) && sn->perform_on) ||
+                     (k == SK_TR_DN && cs.transpose < 0) || (k == SK_TR_UP && cs.transpose > 0);
+            cu_led(nl, 14u + k, on);
+            cu_led(nf, 14u + k, 1);
+            continue;
+        }
         if (CU_MOD_OF_KEY[k] == 0xFFu) {
             if (cs.kbd_full)                       /* (the KEY layer on pick, the Full keyboard: no LOCK) */
                 continue;

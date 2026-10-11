@@ -1,203 +1,174 @@
 # ChoralRoot J-6
 
-**A chord instrument with the 100 chord sets of the Roland AIRA J-6, on an engine of its own.** This is a fork of
-[ChoralRoot FM-1](https://github.com/Quixotic7/ChoralRootFM1), a chord firmware for the M-VAVE FM-1. It adds:
+> **⚠️ Не проверено на реальном железе.** Эту модификацию целиком написал ИИ (Claude, Anthropic) по просьбе
+> владельца репозитория. Её проверили только автоматические тесты и эмулятор прошивки в браузере. На настоящем
+> M-VAVE FM-1 она ещё ни разу не запускалась. **Всё, что вы устанавливаете, вы устанавливаете на свой страх и
+> риск.** Авторы не отвечают за повреждение устройства, потерю данных или «кирпич». Если не готовы рисковать,
+> пользуйтесь браузерными версиями (ссылки внизу): они ничего не ставят на устройство.
+>
+> **⚠️ Not tested on real hardware.** This modification was written entirely by an AI (Claude, by Anthropic) at the
+> request of the repository owner. It has only been checked by automated tests and the in-browser firmware
+> emulator; it has never run on an actual M-VAVE FM-1. **Install it at your own risk.** The authors accept no
+> responsibility for damaged devices, lost data or bricked units.
 
-- **100 chord sets** ([docs/CHORD-SETS.md](docs/CHORD-SETS.md)). Each set gives the 12 keys their own chords, voiced
-  with extensions, slash basses and voice-leading, in genres from Pop, Jazz and Neo Soul to House, Synthwave, EDM,
-  Gospel and Classical. The original firmware builds every chord from the same formulas (M7, maj7, m7 …), which
-  makes every chord sound alike. A set plays chords that were voiced for a style. On the FM-1:
-  **Options > Chord Set** 1 … 100. The chord keys still work on top of a set.
-- **A browser chord player** ([web/j6/](web/j6/index.html)): the 100 sets on an original Web Audio synth with
-  8 sounds, strums, arpeggios and rhythm styles, a 16-step chord sequencer, Web MIDI, computer-keyboard play.
-  No FM-1 needed.
-- **The whole firmware in the browser** (`tools/emu/web`, WebAssembly), Chord Set included.
+**ChoralRoot J-6** — прошивка-аккордовый инструмент для синтезатора **M-VAVE FM-1** со **100 наборами аккордов в
+стиле Roland AIRA J-6**. Это форк [ChoralRoot FM-1](https://github.com/Quixotic7/ChoralRootFM1) (автор Quixotic7):
+всё, что умел оригинал, осталось на месте, а сверху добавлен режим наборов.
 
-The `web` workflow publishes both to GitHub Pages (`/j6/` and `/emu/`) on every push to `main`. Set
-Settings → Pages → Source to "GitHub Actions" once.
+В оригинале каждый аккорд собирается из одних и тех же формул (MAJ, MIN, M7, m7 …), поэтому все аккорды звучат
+однотипно. В наборе J-6 у каждой из 12 нот свой готовый аккорд: с расширениями (9, 11, 13), слэш-басом и
+продуманным голосоведением между соседними аккордами, под конкретный жанр. Нажимаешь одну клавишу — звучит
+«правильный» аккорд стиля.
 
-### About the J-6 chord sets (copyright and trademarks)
+## Что внутри
 
-The sets follow the chord names and voicings in the "Chord Set List" of the Roland J-6 owner's manual. They were
-used as a reference and as inspiration. Chords, voicings and progressions are common musical material that every
-musician uses. The list here contains only which notes form each chord and the chord's name. **No Roland code,
-firmware, samples, sounds, presets or artwork are included.** The chord engine, the synth engines, the sequencer,
-the browser player and all the code are this project's own, under GPL-3.0. ChoralRoot J-6 is not affiliated with,
-endorsed by or sponsored by Roland Corporation. "Roland", "AIRA" and "J-6" are trademarks of Roland Corporation and
-are used only to name the instrument whose chord list the sets follow. The data is kept in one file
-(`data/chordsets/`), so it can be removed without touching the engine.
+| | |
+| --- | --- |
+| **100 наборов аккордов** | Pop, Jazz, Blues, Neo Soul, Gospel/R&B, Lofi, Funk, House, Techno, Trance, Synthwave, EDM, Cinematic, Bossa Nova, Classical, Modern и др. Нумерация, названия и ноты как в таблице J-6 |
+| **Пульт набора на клавиатуре FM-1** | левые 9 клавиш управляют набором, правые 18 играют аккорды (схема ниже) |
+| **144 звука на FM-1** | 6 синтез-движков, в каждом свои пресеты: FM6 · 25, FM TONE · 16, VA · 25, CZ-1 · 64, WHEEL · 5, PHYS · 9 |
+| **Браузерный плеер** | 100 наборов, 24 звука, 14 стилей (страм, арпеджио, ритмы), 16-шаговый секвенсор, MIDI. Устройство не нужно |
+| **Эмулятор прошивки** | вся прошивка FM-1 в браузере, наборы аккордов тоже |
 
-### По-русски
+## Как играть на FM-1
 
-ChoralRoot J-6 — форк прошивки ChoralRoot FM-1 с **100 наборами аккордов как у Roland AIRA J-6**. В каждом наборе
-12 клавиш играют готовые, по-разному «раскрашенные» аккорды (Pop, Jazz, Neo Soul, House, Synthwave, EDM, Gospel,
-Classical и др.), а не однотипные M7 / maj7 / m7. На FM-1: **Options > Chord Set**. В браузере: плеер `web/j6/`
-(синтезатор, арпеджио, ритмы, 16-шаговый секвенсор, MIDI) и эмулятор всей прошивки. Наборы аккордов взяты из
-опубликованной таблицы J-6 как ориентир и вдохновение: аккорды и последовательности — общее музыкальное наследие.
-Движок, звук и код — свои (GPL-3.0). Проект не связан с Roland и не одобрен ею. Roland, AIRA и J-6 — товарные знаки
-Roland Corporation.
+### Включить режим наборов
+
+1. Нажми **OPT** (кнопка с надписью **GLO**). Откроются настройки (Options).
+2. Крути **SELECT** до самого конца списка, до пункта **Chord Set** (он последний, после Reset Settings).
+3. Ручкой **KNOB 1** выбери набор от **1 до 100**. **Off** возвращает обычный режим ChoralRoot.
+4. Снова нажми **OPT**, чтобы закрыть настройки. Вверху экрана появится, например, `Set 12 Jazz Min`.
+
+Выбранный набор сохраняется и после выключения. Reset Settings выключает его (Off).
+
+### Клавиатура в режиме наборов
+
+У FM-1 27 клавиш: от F3 до G5. В обычном ChoralRoot левые 9 клавиш задают тип аккорда, а правые 18 — ноту.
+С набором тип аккорда уже задан набором, поэтому левые 9 клавиш превращаются в **пульт как на панели J-6**:
+
+```
+ЛЕВЫЕ 9 КЛАВИШ (F3 … C#4) = ПУЛЬТ НАБОРА
+
+  чёрные:      F#3       G#3       A#3                 C#4
+              GENRE −   GENRE +   TRANSP +           PHRASE next
+  белые:   F3        G3        A3        B3        C4
+          SET −     SET +    TRANSP −   HOLD    PHRASE on/off
+
+ПРАВЫЕ 18 КЛАВИШ = АККОРДЫ НАБОРА
+  D4 … C#5  — 12 аккордов набора, как в таблице J-6
+  D5 … G5   — те же аккорды на октаву выше
+```
+| Клавиша | Функция | Что делает |
+| --- | --- | --- |
+| **F3** | SET − | предыдущий набор (после 1 идёт 100) |
+| **G3** | SET + | следующий набор (после 100 идёт 1) |
+| **F#3** | GENRE − | первый набор предыдущего жанра (Pop → … → Modern по кругу) |
+| **G#3** | GENRE + | первый набор следующего жанра |
+| **A3** | TRANSPOSE − | транспонировать на полутон вниз (до −12) |
+| **A#3** | TRANSPOSE + | транспонировать на полутон вверх (до +12) |
+| **B3** | HOLD | аккорд звучит и после того, как отпустил клавишу (то же, что кнопка LATCH) |
+| **C4** | PHRASE вкл/выкл | включить или выключить исполнение: страм, арпеджио, паттерн (как STYLE ON на J-6) |
+| **C#4** | PHRASE next | следующий стиль: Strum → Strum 2 Oct → Slop → Arp → Arp 2 Oct → Pattern → Harp |
+
+Подсветка пульта: все клавиши светятся тускло, а ярко горит то, что включено (HOLD, PHRASE, направление
+транспонирования). При каждом нажатии на экране на секунду появляется номер набора и жанр, транспонирование или
+название стиля.
+
+**Аккорды.** Клавиши **D4 … C#5** играют все 12 аккордов набора ровно в тех нотах, что в таблице J-6
+(D, D#, E, F, F#, G, G#, A, A#, B, C, C#). **D5 … G5** играют те же аккорды на октаву выше. Кнопки **OCT− / OCT+**
+сдвигают всё по октавам.
+
+**Остальное работает как в ChoralRoot:**
+- **KNOB 1** — обращение аккорда (нижняя нота уходит на октаву вверх);
+- **BASS** — бас играет нижнюю ноту аккорда, поэтому у слэш-аккордов звучит правильный бас;
+- **PERF**, **FX**, лупер, MIDI — как раньше.
+
+Название аккорда на экране берётся из набора (`Dm7b5`, `C#M9/C` …).
+
+Чтобы вернуть обычные клавиши аккордов ChoralRoot (DIM, MIN, MAJ, SUS, 6, m7, M7, 9, LOCK), поставь
+Options › Chord Set = **Off**.
+
+### Звуки (144 штуки)
+
+- **PRESETS** — листает звуки текущего движка. На экране видно, например, `FM6 · 02/25`.
+- **OPT + PRESETS** — переключает движок: FM6, FM TONE, VA, CZ-1, WHEEL, PHYS.
+- **ALGORITHM** — звук баса.
+
+Всего 144 заводских звука: электропиано, пэды, струнные, брасс, органы, колокольчики, плаки, басы, 64 тембра Casio
+CZ. Свои звуки сохраняются кнопкой SAVE (до 32 штук), редактор открывается кнопкой EDIT. Полный список звуков и
+всех кнопок: [docs/MANUAL.md](docs/MANUAL.md) (на английском).
+
+## Как установить на FM-1
+
+> Ещё раз: **на реальном устройстве не проверялось.** Перед первой установкой сохрани резервную копию: установщик
+> предложит это сам.
+
+1. **Полностью заряди FM-1.** Прошивка пишется от батареи.
+2. Открой установщик в **Chrome** или **Edge** на компьютере:
+   **https://eremansim.github.io/ChoralRootj-6/webapp/installer/**
+3. Подключи FM-1 кабелем **напрямую** к компьютеру: без USB-хаба, кабель должен передавать данные.
+4. Нажми **Install**. Компьютер не должен засыпать, кабель не трогай, пока не появится **Done**.
+5. FM-1 перезагрузится. Дальше смотри «Включить режим наборов» выше.
+
+**Вернуть заводскую прошивку:** в том же установщике есть раздел «Return to official V15». Файл `FM-1.fwsc` нужно
+скачать с [сайта M-VAVE](https://www.m-vave.com/download).
+
+**Если что-то пошло не так:**
+- Если установка прервалась, включи FM-1, удерживая **OCT−**. Клавиши мигнут три раза: устройство в режиме
+  обновления. Открой установщик и снова нажми Install.
+- Если экран чёрный, а компьютер видит диск `WL82 UBOOT1.00`, **не форматируй его**. Следуй
+  [инструкции восстановления](docs/INSTALL-COMPAT.md) и используй [MvaveFM1Unbricker](https://github.com/Quixotic7/MvaveFM1Unbricker).
+
+Файл прошивки и контрольные суммы лежат в [Releases](https://github.com/EremanSim/ChoralRootj-6/releases).
+
+## Браузерный плеер (без устройства)
+
+**https://eremansim.github.io/ChoralRootj-6/j6/**
+
+- **Набор:** стрелки ◀ ▶ или клавиши `,` `.` на компьютере.
+- **Звук:** ◀ ▶ или `N` `M`. Всего 24 звука в 8 группах: Pad, Strings, Brass, Keys, Organ, Pluck, Bell, Synth.
+- **Игра:** клавиши `A W S E D F T G Y H U J` (это C … B) или мышкой и пальцем по нарисованной клавиатуре.
+- **Стиль:** аккорд, страм, 6 арпеджио, ритмы (pulse, house, syncopated, Charleston), бас + аккорд.
+- **Секвенсор:** включи Rec, нажимай аккорды, затем Play (или `Space`).
+- **Ещё:** Octave, Transpose, Voicing, Hold, Bass, Cutoff, Release, Delay, Reverb, Chorus, громкость.
+- MIDI-клавиатура тоже работает, если браузер даёт доступ к MIDI.
+
+## Наборы аккордов, авторские права и товарные знаки
+
+- Наборы повторяют таблицу «Chord Set List» из руководства Roland J-6 (версия 1.02): номера, жанры, названия
+  аккордов и их ноты. Таблица использована как **ориентир и вдохновение**. Аккорды, их расположение и
+  последовательности — общее музыкальное достояние, которым пользуются все музыканты.
+- В проекте **нет кода, прошивки, сэмплов, звуков, пресетов или графики Roland.** Движок аккордов, синтез-движки,
+  секвенсор, браузерный плеер и весь код — собственные, лицензия GPL-3.0.
+- Проект **не связан с Roland Corporation, не одобрен и не спонсируется ею.** «Roland», «AIRA» и «J-6» — товарные
+  знаки Roland Corporation. Они упомянуты только чтобы сказать, на чью таблицу аккордов опираются наборы.
+- Все данные наборов лежат в одном файле (`data/chordsets/`). Если правообладатель возразит, их можно удалить, не
+  трогая остальную прошивку.
+- Подробности для разработчиков: [docs/CHORD-SETS.md](docs/CHORD-SETS.md).
+
+## Благодарности и лицензия
+
+- **ChoralRoot FM-1** — [Quixotic7](https://github.com/Quixotic7/ChoralRootFM1), основа всей прошивки.
+- **Felucca** — Leo Kuroshita (Hügelton Instruments): платформа и движки.
+- **FM6 и CZ-1** — из [Melodee](https://github.com/keremimo/melodee), автор Kerem Kilic (Ellic Studio).
+- **Логика аккордов** вдохновлена Telepathic Instruments Orchid.
+- **Модификация J-6** (наборы аккордов, пульт набора, браузерный плеер) написана ИИ Claude по просьбе
+  [EremanSim](https://github.com/EremanSim).
+
+Лицензия GPL-3.0-only ([LICENSE](LICENSE)). Шрифт, иконки и файлы SDK имеют свои лицензии ([LICENSING.md](LICENSING.md)).
+Orchid, M-VAVE и FM-1 — товарные знаки их владельцев.
+
+Для разработчиков: сборка описана в [BUILDING.md](BUILDING.md), план и архитектура — в [PLAN.md](PLAN.md), тесты
+лежат в `tests/`.
 
 ---
 
-The rest of this README is the upstream firmware's, unchanged.
+## 🌐 Сайт проекта
 
-## ChoralRoot FM-1 (upstream)
+**https://eremansim.github.io/ChoralRootj-6/**
 
-A Telepathic Orchid-style chord instrument as a firmware for the **M-VAVE FM-1**: one hand plays
-roots, the other shapes chords; voicing, Key Mode, performance modes, bass, a looper — with the
-FM-1's own sound engines, a colour screen, USB and TRS MIDI. Built on
-[Felucca](https://github.com/hugelton/Felucca) (Leo Kuroshita, Hügelton Instruments) for the
-platform and the engines, and on [choralroot](https://github.com/Quixotic7/choralroot) (the monome
-grid version) for the musical engine. Independent of and unaffiliated with Telepathic Instruments
-and M-VAVE.
-
-**The manual:** [docs/MANUAL.md](docs/MANUAL.md) (the first five minutes, every button, knob and Options entry, the
-looper, the sound editor, MIDI and USB, updating and recovery, a quick-reference table).
-
-## Install
-
-Try it in the browser first: <https://quixotic7.github.io/ChoralRootFM1/emu/> (the same firmware, with sound, no
-FM-1 needed).
-
-**From the browser:** open the web installer at <https://quixotic7.github.io/ChoralRootFM1/> in Chrome or
-Edge, connect the FM-1 by USB and press Install. Nothing is installed on the computer: the page talks to the
-FM-1 over Web MIDI. Do not unplug while it writes; an interrupted install is resumed by pressing Install again
-(after a power loss too, from 0.16 on: see "If an install was interrupted").
-Afterwards the FM-1 restarts and reports the identity `FM-1_920`. Before installing, the page saves a backup of what
-is stored on the FM-1 (settings, user sounds, loops, FM6 patches) to a file, and after installing over
-Felucca it offers that backup back; its Back up and Restore buttons do the same at any time.
-
-**Before any install:** charge the FM-1 fully (it updates on its battery), connect it straight to the computer with a
-data cable (no hub), keep the computer awake, and leave the cable alone until the installer prints "done". Up to 0.15
-an update interrupted mid-write could leave the FM-1 dark with no USB device at all (docs/INSTALL-COMPAT.md, "Before
-an install"); from 0.16 on it comes back in update mode (below), except during the first second of the install of
-0.16 itself over an older version.
-
-**From the command line:** download `choralroot-X.Y.fwsc` from
-[Releases](https://github.com/Quixotic7/ChoralRootFM1/releases) (`SHA256SUMS` next to it), then
-
-```
-pip3 install mido python-rtmidi
-python3 tools/fm1_install.py choralroot-X.Y.fwsc --backup .   # back up to ./choralroot-backup-YYYYMMDD.json, install
-python3 tools/fm1_install.py --info          # identity of the connected FM-1 (FM-1_920 after the install)
-python3 tools/fm1_install.py --restore FILE  # a backup back onto the FM-1
-python3 tools/fm1_install.py --sounds        # the 32 user sounds; --export-sound N FILE / --import-sound N FILE /
-                                             # --rename-sound N NAME / --delete-sound N (docs/SOUNDS.md)
-```
-
-**Single sounds as files:** the installer page's Sounds section and the commands above export, import, rename and
-delete one user sound at a time (its record and its VA / FM6 / CZ-1 patch) as a small JSON file, without a restart.
-
-**The device manager** (`webapp/installer/manager.html` on the site, [docs/DEVICE-MANAGER.md](docs/DEVICE-MANAGER.md)):
-the FM-1's pools per engine and its ten loop slots next to a library (this browser, files, the factory packs); Place,
-Keep, Swap, Rename, Delete, Undo, a back-up, and an on-screen keyboard over Web MIDI. `manager.html?sim=1` runs it
-against a simulated FM-1, no device needed.
-
-**Back to the stock firmware:** the installer's "Return to official V15" section installs the official FM-1
-V15 firmware, `FM-1.fwsc`, which you download yourself from M-VAVE's
-[downloads page](https://www.m-vave.com/download) (or `python3 tools/fm1_install.py FM-1.fwsc --backup .`). It
-saves a backup first: the stock firmware cannot use ChoralRoot's user sounds, loops or settings; reinstall ChoralRoot
-and press Restore to bring them back. Backups move between firmwares too: a Felucca backup restores its settings,
-user sounds and FM6 patches on ChoralRoot (its samples stay in the file: ChoralRoot is all-synth), and back (BUILDING.md, "Backup and restore").
-
-**Over which firmware:** the stock firmware, Felucca 1.0 or later, Melodee and ChoralRoot. The installers refuse
-Sloop, the Felucca 0.x betas and firmwares they cannot identify: an FM-1 has been bricked by an install over Sloop,
-and Felucca 0.9-beta to 1.0 bricked several (the loader wrote correctly both times; the cause is still open;
-[docs/INSTALL-COMPAT.md](docs/INSTALL-COMPAT.md)). Return to the official V15 with that firmware's installer first.
-
-**SAFE MODE.** If ChoralRoot crashes twice in a row within 30 s of starting (switching it off and on does not count),
-it starts in SAFE MODE (a yellow screen, "Safe mode" on the top line): it plays its factory sounds and ignores what is
-stored in the flash (settings, user sounds, FM6 bank, loops), which stays untouched. Options > Flash Data (OCT+ twice)
-erases that data and restarts; switching off and on tries the stored data again. Installing and Backup still work in
-SAFE MODE, so you can save a backup first. Only if SAFE MODE itself crashes twice does the unit go to update mode
-(ROM boot).
-
-**If an install was interrupted** (ChoralRoot 0.16 and later, which carry the boot stub: docs/BOOT-SAFETY.md,
-[docs/releases/0.16.md](docs/releases/0.16.md)): switch the FM-1 on. The key LEDs flash three times, the screen
-stays black and the FM-1 is in update mode: open the installer and press Install, it finishes the write. The same on
-purpose, whatever state the firmware is in: **hold OCT- (alone) while switching on**, three flashes, open the
-installer, Install (or switch off and on to start the firmware again: nothing was written). The OCT- gesture is new
-in 0.16. From 0.18 on, the same without switching off: **hold OCT-, OCT+ and HOME for 5 seconds** while ChoralRoot
-runs (a countdown from 2 s; let go to cancel). The two OCT keys alone are PANIC and nothing else: they no longer
-lead to the chip's USB boot when held.
-One long flash instead of three: switch off for 10 seconds and try once more; one long flash again means no update
-loader is stored (it is kept from the unit's last install on) and the FM-1 is the USB disk "WL82 UBOOT1.00" until it
-is switched off and on.
-
-**If the FM-1 no longer starts** (black screen, the computer shows a USB disk "WL82 UBOOT1.00"): leave it on for 2
-minutes to see whether it restarts by itself, try holding OCT- and OCT+ while switching on (10 s), and check what the
-computer sees (docs/INSTALL-COMPAT.md, "If an FM-1 is dark"); then
-[MvaveFM1Unbricker](https://github.com/Quixotic7/MvaveFM1Unbricker). If it does not show up as that disk either, the
-hardware route is [FM-1-transporter](https://github.com/kurogedelic/FM-1-transporter).
-
-Installing firmware is at your own risk.
-
-## Status
-
-A public beta, at version 0.16 ([docs/releases/](docs/releases/) has the notes of every version). What is in it; the
-[manual](docs/MANUAL.md) says how to play each part:
-
-- **Chords**: the chord block on the keybed (DIM MIN MAJ SUS on the black keys F#3 G#3 A#3 C#4, 6 m7 M7 9 on the
-  white keys F3 G3 A3 C4, B3 = LOCK), roots on D4..G5, voicing on KNOB 1, Key Mode, the Simple / Advanced / Free play
-  styles, secret chords, LATCH.
-- **Layers** that lock open on a hold (KEY, PERF, FX, BASS, METRO, LOOP), each a picker over a row of four knob
-  cells; OCT- or HOME closes them.
-- **Bass** (four behaviours), **performance modes** (strum, slop, arpeggio, twelve patterns, harp), **FX** (reverb,
-  chorus, delay, drive), a metronome.
-- **The looper**: it records chords, ten slots, five record modes (Overwrite, Advance, Overdub, Replace, Step), the
-  PLAY menu; a loop is saved when it stops ([docs/LOOPER.md](docs/LOOPER.md)).
-- **Six engines**, in the picker's order: FM6 (Melodee's: DX7 voices rendered as Dexed renders them, DX7 SysEx
-  import, [docs/FM6.md](docs/FM6.md)), FM TONE (engine 15, `eng_quad.c`, code name QUAD: four-operator FM in the style
-  of the Digitone, aligned with the Digitone manual's algorithms, carrier levels and controls,
-  [docs/QUAD.md](docs/QUAD.md)), VA ([docs/VA.md](docs/VA.md)), CZ-1 (Melodee's, [docs/CZ1.md](docs/CZ1.md)), WHEEL,
-  PHYS. (PHASE, LOFI, VOICE, TRIO and NOISE, Felucca's, are retired since 0.18: a sound saved on one stays in its
-  slot and plays as a stand-in on the VA.) (Felucca's ANALOG is retired since 0.14: the VA replaces it; an ANALOG sound
-  saved before loads on the VA.) One preset pool per engine (INIT, the factory presets, yours), 32 saved sounds, the
-  sound editor ([docs/PRESETS.md](docs/PRESETS.md), [docs/EDITOR.md](docs/EDITOR.md)).
-- **Views**: Chord, Keyboard, Notes, Geek Out, Scope; Options, one setting per screen.
-- **MIDI**: three streams out over USB (performance on channel 1, bass on 2, the raw chord off by default), MIDI in
-  on the parts (USB and TRS), clock both ways.
-  **USB audio recording** (Melodee's, class compliant, no driver): the computer records the FM-1 through **ChoralRoot
-  In**: the master, the CHORD part and the BASS part as three stereo pairs; Options > USB Record switches it (Off:
-  the serial console instead) ([docs/USB-AUDIO.md](docs/USB-AUDIO.md)).
-- **On the computer**: the web installer with backup, restore and sounds as files, and the web device manager.
-- **New in 0.16** ([docs/releases/0.16.md](docs/releases/0.16.md)): Options > Dual Core is Off by default
-  ([docs/DUALCORE.md](docs/DUALCORE.md)); the boot stub, so an interrupted update comes back in update mode
-  ([docs/BOOT-SAFETY.md](docs/BOOT-SAFETY.md)); the device manager auditions sounds on the unit.
-
-Open: the Orchid parity passes (M8: the secret-chord map, chromatic Key Mode quantization, Key Mode sevenths and the
-factory patterns, which ship as labelled fallbacks until they are captured from an Orchid).
-[PLAN.md](PLAN.md) is the plan and the interface specification; [design/](design/) holds the screen and
-panel mock-ups (made with the [ChoralRoot FM-1 designer](https://github.com/Quixotic7/MvaveFM1-Designer)).
-
-## Layout
-
-| Path | What |
+| | |
 | --- | --- |
-| `docs/MANUAL.md` | the player's manual (its screenshots: `docs/manual/`) |
-| `PLAN.md` | the plan: controls, interaction grammar, screens, architecture, milestones |
-| `design/` | the mock-ups (`make_mockups.py` generates the JSON; the PNG sheets are its renders) |
-| `docs/` | the design documents (the editor, the engines, the looper, presets, settings, USB audio, boot safety) and `docs/releases/`, the release notes |
-| `docs/INTEGRATION.md` | how the engine, the screens and Felucca's sound are wired together |
-| `firmware/` | the firmware: Felucca's `hal/`, `src/` and `loader/`, plus ChoralRoot's `src/cr_*.c` |
-| `tools/` | Felucca's build, generators, installer; `tools/emu/` the Mac emulator |
-| `tools/emu/web/` | the emulator built for the browser (Emscripten) |
-| `tests/` | host tests; `tests/cr_*` are ChoralRoot's |
-| `web/` | the landing page (`web/site/`), the web installer and `make_site.py` (the GitHub Pages site) |
-| `.github/workflows/` | `release.yml` builds the package on a tag, `pages.yml` publishes the site |
-| `assets/`, `LICENSES/` | the UI font, icons, CC0 samples and their licences |
-
-## Building
-
-See [BUILDING.md](BUILDING.md). The host side (tests and the emulator) needs only Xcode's clang,
-Python 3 with Pillow and fontTools, and SDL2; the device build needs Docker and the JieLi toolchain
-(on Linux x86-64 the toolchain runs natively, without Docker).
-
-## Licence
-
-GPL-3.0-only ([LICENSE](LICENSE)). Built on Felucca by Leo Kuroshita (@kurogedelic), Hügelton Instruments, and its FM6
-from [Melodee](https://github.com/keremimo/melodee) by Kerem Kilic (Ellic Studio);
-the chord logic after the Telepathic Instruments Orchid. The firmware is all-synth (no samples in it: Felucca's
-SAMPLE engine and its CC0 instruments by Versilian Studios stay in the tree for Felucca builds); the package carries three JieLi AC79 SDK files under Apache-2.0. The bundled font, icons,
-ported DSP and SDK files keep their own licences ([LICENSES/](LICENSES/)); [LICENSING.md](LICENSING.md) has
-the whole list. Orchid, M-VAVE and FM-1 are trademarks of their owners.
+| Плеер аккордов J-6 в браузере | https://eremansim.github.io/ChoralRootj-6/j6/ |
+| Эмулятор прошивки FM-1 в браузере | https://eremansim.github.io/ChoralRootj-6/emu/ |
+| Установщик прошивки на FM-1 | https://eremansim.github.io/ChoralRootj-6/webapp/installer/ |

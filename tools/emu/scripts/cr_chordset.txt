@@ -1,6 +1,7 @@
 # ChoralRoot: Options > Chord Set (docs/CHORD-SETS.md). GLO opens Options, SELECT +22 lands on Chord Set (after Reset
 # Settings), KNOB 1 +3: set 3 (Jazz); GLO closes. D4 alone then plays the set's D chord, Dm9 (D3 F3 C4 E4: 50 53 60 64);
-# released, every part silent within 2 s. Then KNOB 1 back to Off: D4 alone is a single note again
+# released, every part silent within 2 s. The SET block: G#3 (GENRE +) goes to set 6 (Blues), D4: D9 (50 54 60 64);
+# F3 (SET -) back to 5. Then KNOB 1 back to Off: D4 alone is a single note again
 wait 500
 btn GLO 80
 wait 300
@@ -18,9 +19,18 @@ dump
 btn D4 up
 wait 2000
 dump
+btn G#3 80
+wait 300
+btn D4 down
+wait 400
+dump
+btn D4 up
+wait 1500
+btn F3 80
+wait 300
 btn GLO 80
 wait 300
-knob KNOB1 -3
+knob KNOB1 -9
 wait 300
 btn GLO 80
 wait 300

@@ -331,7 +331,7 @@ function voiceOn(note, when, vel = 0.9) {     // returns a release(when) functio
 /* ---------------------------------------------------------- MIDI out/in --- */
 let midiOut = null;
 function midiSend(bytes, when) { if (midiOut) try { midiOut.send(bytes, performance.now() + Math.max(0, (when - ac.currentTime) * 1000)); } catch (e) {} }
-if (navigator.requestMIDIAccess) {
+if (navigator.requestMIDIAccess) try {
   navigator.requestMIDIAccess().then((m) => {
     const outs = [...m.outputs.values()]; midiOut = outs[0] || null;
     for (const inp of m.inputs.values()) inp.onmidimessage = (e) => {
@@ -339,7 +339,7 @@ if (navigator.requestMIDIAccess) {
       if ((st & 0xf0) === 0x90 && v) press(k, "midi" + n); else if ((st & 0xf0) === 0x80 || (st & 0xf0) === 0x90) release("midi" + n);
     };
   }).catch(() => {});
-}
+} catch (e) {}
 
 /* ------------------------------------------------- phrase styles (clock) --- */
 // a style turns a held chord into notes on the 16th-note grid; pattern p(step, notes) -> [[noteIndexOrAll, gateSteps], ...]

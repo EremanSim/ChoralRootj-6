@@ -281,14 +281,32 @@ const char *cr_chord_set_genre(int set)
     return set >= 1 && set <= CR_NSETS ? CR_SET_GENRES[CR_SET_GENRE[set - 1]] : "";
 }
 
+/* a slash chord's bass in a set's name ("C#M9/C": C; "Dm7/9", "Am7/b13": none), -1 when the name has none */
+static int crx_set_slash_pc(const char *nm)
+{
+    static const uint8_t PCS[7] = { 9, 11, 0, 2, 4, 5, 7 };   /* A..G */
+    int i, pc;
+    for (i = 0; nm[i]; i++) {
+        if (nm[i] != '/' || nm[i + 1] < 'A' || nm[i + 1] > 'G') continue;
+        pc = PCS[nm[i + 1] - 'A'];
+        if (nm[i + 2] == '#') pc++;
+        else if (nm[i + 2] == 'b') pc--;
+        return crx_mod(pc, 12);
+    }
+    return -1;
+}
+
 /* a voice of set cs on its key (v->root): its notes (the voice's transpose in), quality CR_Q_SET, the bass pitch
- * class: the voicing's lowest note's (a slash chord's bass), untransposed as v->pc is */
+ * class, untransposed as v->pc is: a slash chord's bass as its name says it ("F/A": A, whatever note the published
+ * voicing puts lowest), else the voicing's lowest note's */
 static void crx_set_voice(cr_voice_t *v, int cs)
 {
+    int sl;
     v->cs = (uint8_t)cs;
     v->rq = CR_Q_SET;
     v->nbase = (uint8_t)cr_chord_set_chord(cs, v->root, v->transpose, v->base, 0);
-    v->pc = (uint8_t)(v->nbase ? crx_mod(v->base[0] - v->transpose, 12) : v->pc_pressed);
+    sl = cs >= 1 && cs <= CR_NSETS && v->root >= 0 ? crx_set_slash_pc(CR_SET_NAME[cs - 1][v->root % 12]) : -1;
+    v->pc = (uint8_t)(sl >= 0 ? sl : v->nbase ? crx_mod(v->base[0] - v->transpose, 12) : v->pc_pressed);
 }
 
 /* Secret Chords (design.md 6.3): the two most-recently-held Chord Types map to a secret quality when the
@@ -619,6 +637,12 @@ static int crx_bass_ok(const cr_t *c, const cr_voice_t *v)
 }
 static int crx_bass_pitch(const cr_t *c, const cr_voice_t *v)
 {
+    if (c->bass_mode == CR_BASS_UNISON && v->rq == CR_Q_SET && v->nbase) {   /* a chord set's: its bass note at the
+                                                                             * voicing's own register (at or under its
+                                                                             * lowest note), not the key's */
+        int bp = v->pc + v->transpose;
+        return v->base[0] - crx_mod(v->base[0] - bp, 12) + 12 * c->bass_voicing;
+    }
     if (c->bass_mode == CR_BASS_UNISON || (v->zone & CR_Z_BASS)) return v->note_pressed + v->transpose + 12 * c->bass_voicing;
     return (CR_BASS_OCT + c->bass_voicing + 1) * 12 + v->pc + v->transpose;   /* root pc in the bass register */
 }

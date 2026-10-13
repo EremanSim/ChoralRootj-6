@@ -604,6 +604,15 @@ static void s_chordsets(void)
     K(62, 1); R(62, 1);
     expect("+50 +53 +60 +64 +38b -50 -53 -60 -64 -38b", "chord sets: the bass plays the voicing's lowest note's pitch class");
     cr_set_bass(&C, 0);
+    cr_set_chord_set(&C, 1); cr_set_bass(&C, 1);
+    K(73, 1); R(73, 1);
+    expect("+49 +60 +63 +65 +36b -49 -60 -63 -65 -36b", "chord sets: a slash chord's bass is its name's (set 1 C#M9/C: C)");
+    cr_set_bass_mode(&C, CR_BASS_UNISON);
+    K(62, 1); R(62, 1);
+    expect("+50 +57 +60 +65 +50b -50 -57 -60 -65 -50b", "chord sets: Unison Bass plays the voicing's register (D3), not the key's (D4)");
+    K(73, 1); R(73, 1);
+    expect("+49 +60 +63 +65 +48b -49 -60 -63 -65 -48b", "chord sets: Unison Bass, a slash chord: C under the C#3 of C#M9/C");
+    cr_set_bass_mode(&C, CR_BASS_CHORDS_ONLY); cr_set_bass(&C, 0);
     cr_set_chord_set(&C, 92);
     K(62, 1); R(62, 1);
     expect("+48 +51 +54 +58 -48 -51 -54 -58", "chord sets: set 92, D: Cm7b5 (its bass C under the D key)");

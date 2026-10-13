@@ -227,6 +227,18 @@ ok(true, `speed: ${secs.toFixed(2)} s of device time in ${took.toFixed(2)} s (${
   ok(/chord D sounding 1 notes 62\b/.test(d[4] || "") && !/notes 62 /.test(d[4] || ""), "chord set Off: D4 alone is one note again");
 }
 
+// OPT held + a chord-block key: Chord Set on (set 1) and off, without the Options (cr_chordset_opt.txt)
+{
+  const ex3 = await load();
+  ex3.web_boot();
+  const log3 = [];
+  runScript(ex3, parseScript(fs.readFileSync(path.join(ROOT, "tools/emu/scripts/cr_chordset_opt.txt"), "utf8")), log3);
+  const d = log3.filter((l) => l[0] === "dump").map((l) => l[2]);
+  ok(/chord Dm7 sounding 1 notes 50 57 60 65/.test(d[0] || ""), "OPT + F3: chord set 1 on, D4: Dm7 (50 57 60 65)");
+  ok(/chord D sounding 1 notes 62\b/.test(d[1] || "") && !/notes 62 /.test(d[1] || ""), "OPT + F3 again: chord set off, D4 one note");
+  ok(!/options: open 1/.test(d[2] || ""), "OPT's release after the combo: the Options stay closed");
+}
+
 // the worklet's view: 128-frame quanta while a chord plays (a UI frame lands in some of them)
 {
   ex.web_keys((1 << 5) | (1 << 4) | (1 << 9));   // MAJ + M7 + D4

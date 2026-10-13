@@ -1,0 +1,26 @@
+# ChoralRoot: OPT (GLO) held + a chord-block key turns Chord Set on (the last set, 1 at first) and off, as the J-6's
+# SHIFT + CHORD (docs/CHORD-SETS.md). On: D4 plays set 1's Dm7 (50 57 60 65); off again: D4 alone is one note
+wait 500
+btn GLO down
+wait 120
+btn F3 80
+wait 120
+btn GLO up
+wait 300
+btn D4 down
+wait 400
+dump
+btn D4 up
+wait 1500
+btn GLO down
+wait 120
+btn F3 80
+wait 120
+btn GLO up
+wait 300
+btn D4 down
+wait 400
+dump
+btn D4 up
+wait 1500
+dump

@@ -2519,10 +2519,12 @@ static int cu_same(const char *a, const char *b)  /* two strings equal */
         a++, b++;
     return *a == *b;
 }
+static uint8_t cu_set_last = 1;                    /* the last set on (OPT + a chord-block key turns it back on) */
 static void cu_set_pick(uint32_t set)              /* 1..100: the set, its popup */
 {
     char b[8];
     cs.chord_set = (uint8_t)set;
+    cu_set_last = (uint8_t)set;
     cr_post(CRE_CHORDSET, 0, 0, (int32_t)set);
     cu_int(b, (int32_t)set, 0, sizeof b);
     cu_popup(b, cr_chord_set_genre((int)set), "chord set", CR_COL_ORANGE, (int32_t)set, 1, CR_NCHORDSET, 25);
@@ -2987,6 +2989,21 @@ static void cu_key_press(uint32_t k)
                                                     * played (no layer from this press) */
         cu.b3_pend = 0;
         cu_lock_tap();
+    }
+    if (k < CU_ROOT0 && cu_shift() && !cs.kbd_full && cu.page != PG_EDIT && !cu_layer()) {
+        /* OPT (GLO) held + a key of the chord block: Chord Set on / off (the J-6's SHIFT + CHORD), the last set back */
+        cu.combo = 1;                              /* (OPT's release: no Options) */
+        cu.setk |= (uint16_t)(1u << k);            /* (the key's release: nothing) */
+        if (cs.chord_set) {
+            cu_set_last = cs.chord_set;
+            opt_set(O_CHORDSET, 0);
+            cu_message("chord set off", CR_COL_ORANGE);
+        } else {
+            opt_set(O_CHORDSET, cu_set_last ? cu_set_last : 1u);
+            cu_set_pick(cs.chord_set);
+        }
+        cu_trace("set block: OPT + key %u -> chord set %u\n", (unsigned)k, (unsigned)cs.chord_set);
+        return;
     }
     if (k < CU_ROOT0 && cu_set_block() && !cu_key_pick()) {   /* Chord Set on: the SET block (above) */
         cu.setk |= (uint16_t)(1u << k);

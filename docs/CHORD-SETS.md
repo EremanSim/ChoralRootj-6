@@ -11,7 +11,9 @@ genres, chord names and notes. See [Where the sets come from](#where-the-sets-co
 
 ## Playing them on the FM-1
 
-**Options > Chord Set** (the entry after Reset Settings; SELECT moves through Options, KNOB 1 sets the value):
+**OPT (GLO) held + any key of the chord block (F3 … C#4)** turns Chord Set on (the last set, 1 at first) and off, as
+the J-6's SHIFT + CHORD. Or **Options > Chord Set** (the entry after Reset Settings; SELECT moves through Options,
+KNOB 1 sets the value):
 
 | Value | What a root key does |
 | --- | --- |

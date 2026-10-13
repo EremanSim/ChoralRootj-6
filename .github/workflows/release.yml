@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Build the ChoralRoot FM-1 release package (BUILDING.md, "Releasing").
 #   push of a tag vX.Y  -> build, create or update the GitHub release vX.Y with the assets, then run pages.yml
-#   workflow_dispatch   -> build only; the package is a workflow artifact (choralroot-X.Y)
+#   workflow_dispatch   -> build only; the package is a workflow artifact (choralroot-X.Y). With publish: true, the
+#                          same as a tag push: the tag vX.Y made on the commit built, the release, then pages.yml (so a
+#                          release needs no tag pushed by hand)
 # On ubuntu (x86-64) tools/build.py runs the JieLi toolchain natively, no Docker.
 name: release
 
@@ -11,9 +13,14 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to build, e.g. 0.1 (X.Y, X.Y.Z or X.Y-suffix). Builds an artifact; no release."
+        description: "Version to build, e.g. 0.1 (X.Y, X.Y.Z or X.Y-suffix). Builds an artifact; no release unless publish."
         required: true
         type: string
+      publish:
+        description: "Also make the tag vVERSION on this commit, the release and the site"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -130,7 +137,7 @@ jobs:
 
   release:
     needs: build
-    if: github.event_name == 'push' && github.ref_type == 'tag'
+    if: (github.event_name == 'push' && github.ref_type == 'tag') || (github.event_name == 'workflow_dispatch' && inputs.publish)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -169,7 +176,7 @@ jobs:
             sed "s/@VERSION@/$VERSION/g" <<'EOT'
           ChoralRoot @VERSION@ for the M-VAVE FM-1 (identity FM-1_920).
 
-          Install from the browser at https://quixotic7.github.io/ChoralRootFM1/ (Chrome or Edge, the FM-1 connected by USB), or with the command-line installer: `python3 tools/fm1_install.py choralroot-@VERSION@.fwsc`.
+          Not tested on real hardware (the J-6 fork, written with Claude): install at your own risk. Install from the browser at https://eremansim.github.io/ChoralRootj-6/webapp/installer/ (Chrome or Edge, the FM-1 connected by USB), or with the command-line installer: `python3 tools/fm1_install.py choralroot-@VERSION@.fwsc`.
 
           `SHA256SUMS` lists the package and the app. The package holds three JieLi AC79 SDK files (Apache-2.0); `LICENSE`, `LICENSING.md` and `LICENSES.zip` carry every licence. Installing firmware is at your own risk.
           EOT
@@ -178,7 +185,8 @@ jobs:
       - name: Create or update the release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
-          tag_name: ${{ github.ref_name }}
+          tag_name: v${{ needs.build.outputs.version }}
+          target_commitish: ${{ github.sha }}
           name: ChoralRoot ${{ needs.build.outputs.version }}
           prerelease: ${{ startsWith(needs.build.outputs.version, '0.') || contains(needs.build.outputs.version, '-') }}
           generate_release_notes: true
@@ -187,7 +195,6 @@ jobs:
           body_path: release-body.md
 
       - name: Publish the site (pages.yml)
-        if: ${{ !contains(env.VERSION, '-') }}
         env:
           GH_TOKEN: ${{ github.token }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
@@ -195,5 +202,5 @@ jobs:
           set -euo pipefail
           # run from the default branch (the github-pages environment allows it), the site built from the tag
           gh workflow run pages.yml --repo "$GITHUB_REPOSITORY" --ref "$DEFAULT_BRANCH" \
-              -f version="$VERSION" -f ref="$GITHUB_REF_NAME"
+              -f version="$VERSION" -f ref="v$VERSION"
           echo "::notice::pages.yml started for $VERSION (Actions tab); the site follows in a minute or two"

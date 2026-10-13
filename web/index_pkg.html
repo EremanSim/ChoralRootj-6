@@ -69,6 +69,41 @@
   .snd tr.empty td { color: var(--grey); }
   .snd button { padding: 3px 8px; margin: 2px 0 2px 4px; background: var(--dark); color: var(--cream); font-size: 13px; font-weight: 700; }
   .snd button:not(:disabled):hover { background: var(--cream); color: #000; }
+  /* the player guide (#guide) */
+  section.guide { margin-top: 56px; border-top: 3px solid var(--orange); padding-top: 20px; }
+  .guide h3 { font-size: 17px; font-weight: 800; margin: 28px 0 10px; }
+  .g-steps { margin: 0 0 8px; padding-left: 22px; }
+  .g-steps li { margin: 0 0 10px; }
+  .k { display: inline-block; padding: 0 6px; border-radius: 3px; background: var(--dark); color: var(--cream); font-weight: 800;
+       font-size: 14px; line-height: 1.5; white-space: nowrap; }
+  .k.o { background: var(--orange); color: #000; }
+  .lcd { font-weight: 800; color: var(--orange); white-space: nowrap; }
+  .g-fig { margin: 8px 0 8px; overflow-x: auto; }
+  .g-fig svg { display: block; width: 100%; min-width: 480px; height: auto; font-family: inherit; }
+  .g-h { font-size: 11px; font-weight: 800; fill: var(--cream); letter-spacing: .02em; }
+  .g-h.o { fill: var(--orange); } .g-h.d { fill: var(--dim); }
+  .g-w rect { fill: #e9e6e2; stroke: #000; } .g-w rect.p { fill: #fff; } .g-w rect.u { fill: #cfcbc6; }
+  .g-b rect { fill: #151515; stroke: #000; }
+  .g-wt text, .g-bt text, .g-n text, .g-kl text, .g-kr text, .g-bl text, .g-br text { text-anchor: middle; }
+  .g-wt text { font-size: 10px; font-weight: 900; fill: #b14d00; }
+  .g-bt text { font-size: 8px; font-weight: 900; fill: #F67918; }
+  .g-n text { font-size: 10px; font-weight: 700; fill: #555; }
+  .g-body { fill: #1B1B1B; stroke: #2E2E2E; stroke-width: 2; }
+  .g-knob circle { fill: #2a2a2a; stroke: #444; stroke-width: 3; }
+  .g-kl text { font-size: 10px; font-weight: 900; fill: var(--cream); }
+  .g-kr text { font-size: 9px; font-weight: 700; fill: var(--dim); } .g-kr text.o, .g-kr .o { fill: var(--orange); }
+  text.g-kr { font-size: 9px; font-weight: 700; fill: var(--dim); text-anchor: middle; }
+  .g-scr { fill: #000; stroke: #333; }
+  .g-lcd { font-size: 10px; font-weight: 800; } .g-lcd.o { fill: var(--orange); }
+  .g-big { font-size: 52px; font-weight: 900; fill: var(--cream); text-anchor: middle; }
+  .g-sup { font-size: 20px; font-weight: 900; fill: var(--orange); }
+  .g-lcd2 { font-size: 11px; font-weight: 700; fill: var(--cream); text-anchor: middle; }
+  .g-btn rect { fill: #5a5a5a; stroke: #000; } .g-btn rect.hi { fill: var(--orange); }
+  .g-bl text { font-size: 10px; font-weight: 900; fill: var(--cream); } .g-bl text.dk { fill: #000; }
+  .g-br text { font-size: 7px; font-weight: 700; fill: #d8d8d8; } .g-br text.dk { fill: #000; }
+  table.g-t { width: 100%; border-collapse: collapse; font-size: 15px; }
+  .g-t td { padding: 7px 6px; border-bottom: 1px solid var(--dark); vertical-align: top; }
+  .g-t td:first-child { white-space: nowrap; width: 1%; }
   footer { margin-top: 64px; padding-top: 20px; border-top: 3px solid var(--dark); }
   footer p { color: var(--dim); font-size: 13px; }
 </style>
@@ -92,6 +127,119 @@
   <progress id="bar" max="100" value="0"></progress>
   <p id="status"></p>
   <pre id="log"></pre>
+  <!-- the J-6 fork's player guide (README "Как играть"), Russian: static, no script -->
+  <section class="guide" id="guide" lang="ru" aria-labelledby="g-title">
+    <h2 id="g-title">Как играть: наборы аккордов J-6</h2>
+    <p class="small">После надписи <b>Done</b> FM-1 перезагрузится сам. Дальше — по шагам.</p>
+
+    <ol class="g-steps">
+      <li><b>Включи наборы.</b> Зажми <span class="k">GLO</span> и нажми любую из <b>левых 9 клавиш</b>. Вверху экрана появится <span class="lcd">Set 1 Pop</span>. Той же комбинацией наборы выключаются.</li>
+      <li><b>Играй аккорды</b> правыми 18 клавишами: одна клавиша — один готовый аккорд набора.</li>
+      <li><b>Выбирай набор</b> левыми клавишами: <span class="k o">F3</span> назад, <span class="k o">G3</span> вперёд, <span class="k o">F#3</span>/<span class="k o">G#3</span> — по жанрам.</li>
+      <li><b>Выбирай звук</b> ручкой <span class="k">PRESETS</span>: все 144 звука подряд, на экране <span class="lcd">FM TONE · 28/144</span>.</li>
+      <li><b>Оживи аккорд</b>: <span class="k o">C4</span> включает страм/арпеджио, <span class="k o">C#4</span> меняет его стиль, <span class="k o">B3</span> держит аккорд (HOLD).</li>
+    </ol>
+
+    <h3>Клавиатура в режиме наборов</h3>
+    <div class="g-fig">
+    <svg viewBox="0 0 640 230" role="img" aria-label="Клавиатура FM-1 от F3 до G5: левые 9 клавиш — пульт набора, правые 18 — аккорды">
+      <text x="2" y="14" class="g-h o">ПУЛЬТ НАБОРА · F3…C#4</text>
+      <text x="200" y="14" class="g-h">АККОРДЫ · D4…C#5: 12 аккордов</text>
+      <text x="482" y="14" class="g-h d">D5…G5: октава выше</text>
+      <rect x="0" y="20" width="198" height="5" fill="#F67918"/><rect x="200" y="20" width="278" height="5" fill="#F6F2EE"/><rect x="480" y="20" width="160" height="5" fill="#6A696A"/>
+      <g class="g-w">
+        <rect x="0" y="32" width="39" height="180"/><rect x="40" y="32" width="39" height="180"/><rect x="80" y="32" width="39" height="180"/>
+        <rect x="120" y="32" width="39" height="180"/><rect x="160" y="32" width="39" height="180"/>
+        <rect x="200" y="32" width="39" height="180" class="p"/><rect x="240" y="32" width="39" height="180" class="p"/><rect x="280" y="32" width="39" height="180" class="p"/>
+        <rect x="320" y="32" width="39" height="180" class="p"/><rect x="360" y="32" width="39" height="180" class="p"/><rect x="400" y="32" width="39" height="180" class="p"/>
+        <rect x="440" y="32" width="39" height="180" class="p"/><rect x="480" y="32" width="39" height="180" class="u"/>
+        <rect x="520" y="32" width="39" height="180" class="u"/><rect x="560" y="32" width="39" height="180" class="u"/><rect x="600" y="32" width="39" height="180" class="u"/>
+      </g>
+      <g class="g-wt">
+        <text x="20" y="168">SET−</text><text x="60" y="168">SET+</text><text x="100" y="168">TR−</text><text x="140" y="168">HOLD</text><text x="180" y="160">PHRS</text><text x="180" y="172">вкл</text>
+      </g>
+      <g class="g-n">
+        <text x="20" y="204">F3</text><text x="60" y="204">G3</text><text x="100" y="204">A3</text><text x="140" y="204">B3</text><text x="180" y="204">C4</text>
+        <text x="220" y="204">D4</text><text x="260" y="204">E4</text><text x="300" y="204">F4</text><text x="340" y="204">G4</text><text x="380" y="204">A4</text>
+        <text x="420" y="204">B4</text><text x="460" y="204">C5</text><text x="500" y="204">D5</text><text x="540" y="204">E5</text><text x="580" y="204">F5</text><text x="620" y="204">G5</text>
+      </g>
+      <g class="g-b">
+        <rect x="27" y="32" width="26" height="108"/><rect x="67" y="32" width="26" height="108"/><rect x="107" y="32" width="26" height="108"/>
+        <rect x="187" y="32" width="26" height="108"/><rect x="227" y="32" width="26" height="108"/><rect x="307" y="32" width="26" height="108"/>
+        <rect x="347" y="32" width="26" height="108"/><rect x="387" y="32" width="26" height="108"/><rect x="467" y="32" width="26" height="108"/>
+        <rect x="507" y="32" width="26" height="108"/><rect x="587" y="32" width="26" height="108"/>
+      </g>
+      <g class="g-bt">
+        <text x="40" y="108">GNR−</text><text x="80" y="108">GNR+</text><text x="120" y="108">TR+</text><text x="200" y="100">PHRS</text><text x="200" y="112">next</text>
+      </g>
+    </svg>
+    </div>
+    <p class="small">D5 — тот же аккорд, что D4, только на октаву выше (и так до G5); C5 и C#5 играют аккорды C и C# набора. Кнопки <span class="k">OCT−</span> / <span class="k">OCT+</span> сдвигают всё по октавам.</p>
+
+    <h3>Левые 9 клавиш</h3>
+    <table class="g-t">
+      <tr><td><span class="k o">F3</span> / <span class="k o">G3</span></td><td>набор назад / вперёд (1 … 100 по кругу)</td></tr>
+      <tr><td><span class="k o">F#3</span> / <span class="k o">G#3</span></td><td>первый набор предыдущего / следующего жанра</td></tr>
+      <tr><td><span class="k o">A3</span> / <span class="k o">A#3</span></td><td>транспонировать на полутон вниз / вверх</td></tr>
+      <tr><td><span class="k o">B3</span></td><td>HOLD: аккорд звучит после отпускания клавиши</td></tr>
+      <tr><td><span class="k o">C4</span></td><td>фраза вкл/выкл: страм, арпеджио, паттерн</td></tr>
+      <tr><td><span class="k o">C#4</span></td><td>следующая фраза: Strum → Strum 2 Oct → Slop → Arp → Arp 2 Oct → Pattern → Harp</td></tr>
+    </table>
+
+    <h3>Кнопки и ручки</h3>
+    <p class="small">На кнопках FM-1 напечатаны свои названия (серые), под ними — что они делают в этой прошивке.</p>
+    <div class="g-fig">
+    <svg viewBox="0 0 640 250" role="img" aria-label="Панель FM-1: ручки VOLUME, SELECT, PRESETS, ALGORITHM, KNOB 1–4, экран, кнопки FX SEL ENV LFO EDIT GLO HOME SAVE ARP SEQ PLAY REC и OCT">
+      <rect x="1" y="1" width="638" height="248" rx="22" class="g-body"/>
+      <g class="g-knob">
+        <circle cx="50" cy="58" r="17"/><circle cx="130" cy="58" r="17"/><circle cx="50" cy="150" r="17"/><circle cx="130" cy="150" r="17"/>
+        <circle cx="400" cy="58" r="17"/><circle cx="465" cy="58" r="17"/><circle cx="530" cy="58" r="17"/><circle cx="595" cy="58" r="17"/>
+      </g>
+      <g class="g-kl">
+        <text x="50" y="30">VOLUME</text><text x="130" y="30">SELECT</text><text x="50" y="122">PRESETS</text><text x="130" y="122">ALGORITHM</text>
+        <text x="400" y="30">KNOB 1</text><text x="465" y="30">KNOB 2</text><text x="530" y="30">KNOB 3</text><text x="595" y="30">KNOB 4</text>
+      </g>
+      <g class="g-kr">
+        <text x="50" y="90">громкость</text><text x="130" y="90">темп / меню</text><text x="50" y="182" class="o">звук (144)</text><text x="130" y="182">звук баса</text>
+        <text x="400" y="90">обращение</text><text x="465" y="90">регистр баса</text><text x="530" y="90">фраза</text><text x="595" y="90">эффекты</text>
+      </g>
+      <rect x="182" y="26" width="160" height="160" rx="8" class="g-scr"/>
+      <text x="196" y="48" class="g-lcd o">Set 12 Jazz Min</text>
+      <text x="262" y="122" class="g-big">Dm</text><text x="318" y="96" class="g-sup">7b5</text>
+      <text x="262" y="170" class="g-lcd2">D3  C4  F4  G#4</text>
+      <g class="g-btn">
+        <rect x="370" y="112" width="40" height="34" rx="4"/><rect x="415" y="112" width="40" height="34" rx="4"/><rect x="460" y="112" width="40" height="34" rx="4"/>
+        <rect x="505" y="112" width="40" height="34" rx="4"/><rect x="550" y="112" width="40" height="34" rx="4"/><rect x="595" y="112" width="40" height="34" rx="4" class="hi"/>
+        <rect x="370" y="168" width="40" height="34" rx="4"/><rect x="415" y="168" width="40" height="34" rx="4"/><rect x="460" y="168" width="40" height="34" rx="4"/>
+        <rect x="505" y="168" width="40" height="34" rx="4"/><rect x="550" y="168" width="40" height="34" rx="4"/><rect x="595" y="168" width="40" height="34" rx="4"/>
+        <rect x="24" y="206" width="52" height="24" rx="4"/><rect x="104" y="206" width="52" height="24" rx="4"/>
+      </g>
+      <g class="g-bl">
+        <text x="390" y="128">FX</text><text x="435" y="128">SEL</text><text x="480" y="128">ENV</text><text x="525" y="128">LFO</text><text x="570" y="128">EDIT</text><text x="615" y="128" class="dk">GLO</text>
+        <text x="390" y="184">HOME</text><text x="435" y="184">SAVE</text><text x="480" y="184">ARP</text><text x="525" y="184">SEQ</text><text x="570" y="184">PLAY</text><text x="615" y="184">REC</text>
+        <text x="50" y="222">OCT−</text><text x="130" y="222">OCT+</text>
+      </g>
+      <g class="g-br">
+        <text x="390" y="140">эффекты</text><text x="435" y="140">лад</text><text x="480" y="140">бас</text><text x="525" y="140">latch</text><text x="570" y="140">редактор</text><text x="615" y="140" class="dk">настройки</text>
+        <text x="390" y="196">домой</text><text x="435" y="196">сохранить</text><text x="480" y="196">фраза</text><text x="525" y="196">метроном</text><text x="570" y="196">лупер</text><text x="615" y="196">запись</text>
+      </g>
+      <text x="90" y="244" class="g-kr">обе вместе: PANIC (тишина)</text>
+    </svg>
+    </div>
+
+    <h3>Что ещё полезно</h3>
+    <table class="g-t">
+      <tr><td><span class="k">GLO</span> + левая клавиша</td><td>наборы вкл/выкл (вернётся последний набор)</td></tr>
+      <tr><td><span class="k">GLO</span> + <span class="k">PRESETS</span></td><td>сменить движок звука (FM6, FM TONE, VA, CZ-1, WHEEL, PHYS)</td></tr>
+      <tr><td><span class="k">ENV</span></td><td>бас вкл/выкл; <span class="k">ALGORITHM</span> выбирает его звук</td></tr>
+      <tr><td><span class="k">ARP</span> (держать)</td><td>выбор фразы и её параметров ручками KNOB 1–4</td></tr>
+      <tr><td><span class="k">REC</span>, потом аккорды</td><td>записать луп; <span class="k">PLAY</span> — меню лупов</td></tr>
+      <tr><td><span class="k">SAVE</span></td><td>сохранить свой звук (до 32)</td></tr>
+      <tr><td><span class="k">OCT−</span> + <span class="k">OCT+</span></td><td>PANIC: заглушить всё, если что-то застряло</td></tr>
+      <tr><td><span class="k">GLO</span> → <span class="k">SELECT</span> до конца</td><td>пункт <b>Chord Set</b> в настройках: тот же выбор набора 1…100 ручкой KNOB 1</td></tr>
+    </table>
+    <p class="small">Без набора (Chord Set: Off) FM-1 работает как обычный ChoralRoot: левые клавиши — тип аккорда (DIM MIN MAJ SUS, 6 m7 M7 9, LOCK), PRESETS листает звуки одного движка. Попробовать всё без устройства: <a href="../../emu/?set=1">эмулятор FM-1</a>. Подробно: <a href="https://github.com/EremanSim/ChoralRootj-6#readme" target="_blank" rel="noopener">README</a>.</p>
+  </section>
   <details id="dark">
     <summary data-t="darkTitle"></summary>
     <p class="small" data-t="darkCable"></p>
